@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contato — Guia Med</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">Guia<span>Med</span></a>
+    <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="index.html#feed">Guias</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+      <li><a href="contato.html">Contato</a></li>
+    </ul>
+    <div class="search-box" style="visibility:hidden;"><input></div>
+    <button class="icon-btn" id="darkToggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">🌙</button>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<div class="page-header">
+  <h1>Fale com a gente</h1>
+  <p>Dúvidas, sugestões de temas ou correções em algum guia? Manda pra cá.</p>
+</div>
+
+<div class="contato-grid">
+  <form class="contato-form" id="formContato" novalidate>
+    <!-- honeypot: campo invisível para humanos, se vier preenchido é bot -->
+    <div class="form-group hp-field">
+      <label for="siteWeb">Não preencha este campo</label>
+      <input type="text" id="siteWeb" name="siteWeb" tabindex="-1" autocomplete="off">
+    </div>
+
+    <div class="form-group">
+      <label for="ctNome">Nome</label>
+      <input type="text" id="ctNome" required>
+      <span class="form-error" id="erroCtNome"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="ctEmail">E-mail</label>
+      <input type="email" id="ctEmail" required>
+      <span class="form-error" id="erroCtEmail"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="ctAssunto">Assunto</label>
+      <select id="ctAssunto" required>
+        <option value="">Selecione...</option>
+        <option value="Sugestão de tema">Sugestão de tema para um guia</option>
+        <option value="Correção de conteúdo">Correção de conteúdo em um guia</option>
+        <option value="Problema técnico">Problema técnico no site</option>
+        <option value="Parceria">Parceria ou divulgação</option>
+        <option value="Outro">Outro assunto</option>
+      </select>
+      <span class="form-error" id="erroCtAssunto"></span>
+    </div>
+
+    <div class="form-group">
+      <label for="ctMensagem">Mensagem</label>
+      <textarea id="ctMensagem" maxlength="800" required></textarea>
+      <span class="char-counter"><span id="ctContador">0</span>/800</span>
+      <span class="form-error" id="erroCtMensagem"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary" id="btnEnviarContato">Enviar mensagem</button>
+    <p class="form-hint" id="statusEnvio"></p>
+  </form>
+
+  <aside>
+    <div class="aside-card">
+      <h4>Tempo de resposta</h4>
+      <p>Como somos só duas pessoas cuidando do Guia Med, o prazo de resposta é de até 3 dias úteis.</p>
+    </div>
+    <div class="aside-card">
+      <h4>Prefere e-mail direto?</h4>
+      <p>Escreva para <strong>contato@guiamed.com.br</strong> (endereço de exemplo — troque pelo e-mail real de vocês).</p>
+    </div>
+  </aside>
+</div>
+
+<footer class="site-footer">
+  <nav>
+    <a href="sobre.html">Sobre</a>
+    <a href="privacidade.html">Política de Privacidade</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <span class="copyright">© 2026 Guia Med. Todos os direitos reservados.</span>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+<script>
+  /* =========================================================
+     ENVIO DO FORMULÁRIO DE CONTATO
+     ---------------------------------------------------------
+     Este site é estático (sem servidor), então não existe um
+     jeito puramente client-side de "enviar e-mail" de forma
+     nativa e segura. Duas opções reais ficam prontas aqui:
+
+     OPÇÃO A (ativa agora, funciona sem configurar nada):
+     abre o app de e-mail do usuário com tudo pré-preenchido,
+     via link "mailto:". Funciona hoje, mas depende do
+     visitante ter um cliente de e-mail configurado no aparelho.
+
+     OPÇÃO B (recomendada, entrega real dentro do site):
+     usar um serviço gratuito de formulário como o EmailJS
+     (emailjs.com) ou o Web3Forms (web3forms.com). Basta:
+       1. Criar conta gratuita no serviço escolhido.
+       2. Pegar as chaves (Service ID / Template ID / Public Key
+          no EmailJS, ou Access Key no Web3Forms).
+       3. Colar as chaves nas constantes abaixo.
+     Assim que EMAILJS_PUBLIC_KEY deixar de ser null, o site
+     passa a enviar o e-mail de verdade sem sair da página,
+     sem precisar de app de e-mail no aparelho do visitante.
+     ========================================================= */
+
+  const EMAILJS_PUBLIC_KEY  = null; // ex: 'a1B2c3D4...'
+  const EMAILJS_SERVICE_ID  = null; // ex: 'service_guiamed'
+  const EMAILJS_TEMPLATE_ID = null; // ex: 'template_contato'
+
+  const form = document.getElementById('formContato');
+  const contador = document.getElementById('ctContador');
+  const textarea = document.getElementById('ctMensagem');
+  const statusEnvio = document.getElementById('statusEnvio');
+  const btnEnviar = document.getElementById('btnEnviarContato');
+
+  textarea.addEventListener('input', () => {
+    contador.textContent = textarea.value.length;
+  });
+
+  function setErro(inputId, erroId, mensagem){
+    const input = document.getElementById(inputId);
+    const erro = document.getElementById(erroId);
+    input.closest('.form-group').classList.toggle('invalid', !!mensagem);
+    erro.textContent = mensagem || '';
+    erro.classList.toggle('show', !!mensagem);
+  }
+
+  function validarFormulario(){
+    let valido = true;
+    const nome = document.getElementById('ctNome').value.trim();
+    const email = document.getElementById('ctEmail').value.trim();
+    const assunto = document.getElementById('ctAssunto').value;
+    const mensagem = textarea.value.trim();
+
+    setErro('ctNome','erroCtNome','');
+    setErro('ctEmail','erroCtEmail','');
+    setErro('ctAssunto','erroCtAssunto','');
+    setErro('ctMensagem','erroCtMensagem','');
+
+    if(nome.length < 2){ setErro('ctNome','erroCtNome','Informe seu nome.'); valido = false; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ setErro('ctEmail','erroCtEmail','Informe um e-mail válido.'); valido = false; }
+    if(!assunto){ setErro('ctAssunto','erroCtAssunto','Selecione um assunto.'); valido = false; }
+    if(mensagem.length < 10){ setErro('ctMensagem','erroCtMensagem','Escreva uma mensagem com pelo menos 10 caracteres.'); valido = false; }
+
+    return valido;
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // honeypot: se o campo escondido veio preenchido, é bot — ignora silenciosamente
+    if(document.getElementById('siteWeb').value){
+      statusEnvio.textContent = 'Mensagem enviada!';
+      form.reset();
+      return;
+    }
+
+    if(!validarFormulario()) return;
+
+    const dados = {
+      nome: document.getElementById('ctNome').value.trim(),
+      email: document.getElementById('ctEmail').value.trim(),
+      assunto: document.getElementById('ctAssunto').value,
+      mensagem: textarea.value.trim()
+    };
+
+    btnEnviar.disabled = true;
+    btnEnviar.textContent = 'Enviando...';
+
+    if(EMAILJS_PUBLIC_KEY && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID){
+      // OPÇÃO B: envio real via EmailJS (requer <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser/dist/email.min.js"> incluído no <head>)
+      try{
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, dados, EMAILJS_PUBLIC_KEY);
+        mostrarToast('Mensagem enviada com sucesso!', 'sucesso');
+        form.reset(); contador.textContent = '0';
+      }catch(err){
+        console.error(err);
+        mostrarToast('Não foi possível enviar agora. Tente novamente.', 'erro');
+      }
+    } else {
+      // OPÇÃO A (ativa por padrão): abre o cliente de e-mail do usuário
+      const corpo = encodeURIComponent(
+        `Nome: ${dados.nome}\nE-mail: ${dados.email}\nAssunto: ${dados.assunto}\n\n${dados.mensagem}`
+      );
+      window.location.href = `mailto:contato@guiamed.com.br?subject=${encodeURIComponent('[Guia Med] ' + dados.assunto)}&body=${corpo}`;
+      mostrarToast('Abrindo seu aplicativo de e-mail...', 'info');
+      form.reset(); contador.textContent = '0';
+    }
+
+    btnEnviar.disabled = false;
+    btnEnviar.textContent = 'Enviar mensagem';
+  });
+</script>
+</body>
+</html>

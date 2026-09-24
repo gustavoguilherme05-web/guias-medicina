@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Guia Med</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">Guia<span>Med</span></a>
+    <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="index.html#feed">Guias</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+      <li><a href="contato.html">Contato</a></li>
+    </ul>
+    <div class="search-box">
+      <span>🔍</span>
+      <input type="text" placeholder="Buscar por tema, tag..." disabled>
+    </div>
+    <button class="icon-btn" id="darkToggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">🌙</button>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<main class="artigo-wrapper" id="artigoContainer">
+  <a href="index.html#feed" class="voltar-link">← Voltar para a lista</a>
+  <div id="artigoConteudo">
+    <p>Carregando guia...</p>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="sobre.html">Sobre</a>
+    <a href="privacidade.html">Política de Privacidade</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <span class="copyright">© 2026 Guia Med. Todos os direitos reservados.</span>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sobre — Guia Med</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">Guia<span>Med</span></a>
+    <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="index.html#feed">Guias</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+      <li><a href="contato.html">Contato</a></li>
+    </ul>
+    <div class="search-box" style="visibility:hidden;"><input></div>
+    <button class="icon-btn" id="darkToggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">🌙</button>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<div class="page-header">
+  <h1>Sobre o Guia Med</h1>
+  <p>Um projeto de estudante para estudante, sem paywall.</p>
+</div>
+
+<div class="page-content">
+  <h2>Por que existimos</h2>
+  <p>A graduação em medicina é densa, e boa parte do material de qualidade por aí está atrás de assinaturas caras demais para o bolso de estudante. O Guia Med nasceu para preencher esse espaço: guias objetivos, escritos por quem está vivendo a rotina de estudo e plantão, e revisados com cuidado — de graça, sem letra miúda.</p>
+
+  <h2>Quem faz o Guia Med</h2>
+  <div class="sobre-grid">
+    <div class="sobre-pessoa">
+      <span class="papel">Conteúdo</span>
+      <p>Estudante de medicina responsável por escrever, revisar e manter a precisão técnica de cada guia publicado no site.</p>
+    </div>
+    <div class="sobre-pessoa">
+      <span class="papel">Tecnologia</span>
+      <p>Responsável pela construção e manutenção técnica do site, para que o conteúdo chegue de forma rápida, leve e acessível em qualquer aparelho.</p>
+    </div>
+  </div>
+
+  <h2>Como escolhemos os temas</h2>
+  <p>Priorizamos assuntos que aparecem com frequência nas provas da graduação e no dia a dia de plantão — leitura de exames, condutas iniciais em emergência e raciocínio clínico estruturado — sempre com base em diretrizes e literatura médica atual.</p>
+
+  <div class="aviso">
+    O conteúdo do Guia Med tem finalidade educacional para estudantes de medicina em formação. Ele não substitui diretrizes institucionais, o julgamento clínico de um profissional habilitado, nem deve ser usado como única base para decisões sobre pacientes reais.
+  </div>
+
+  <h2>Fale com a gente</h2>
+  <p>Tem sugestão de tema, encontrou algo que merece correção ou só quer dar um alô? Passa lá na <a href="contato.html" style="color:var(--vital-dark); font-weight:600;">página de contato</a>.</p>
+</div>
+
+<footer class="site-footer">
+  <nav>
+    <a href="sobre.html">Sobre</a>
+    <a href="privacidade.html">Política de Privacidade</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <span class="copyright">© 2026 Guia Med. Todos os direitos reservados.</span>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

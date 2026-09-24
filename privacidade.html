@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Política de Privacidade — Guia Med</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">Guia<span>Med</span></a>
+    <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="index.html#feed">Guias</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+      <li><a href="contato.html">Contato</a></li>
+    </ul>
+    <div class="search-box" style="visibility:hidden;"><input></div>
+    <button class="icon-btn" id="darkToggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">🌙</button>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<div class="page-header">
+  <h1>Política de Privacidade</h1>
+  <p>Última atualização: 6 de julho de 2026</p>
+</div>
+
+<div class="page-content">
+  <p>No <strong>Guia Med</strong>, acreditamos que transparência é tão importante quanto um bom diagnóstico. Esta política explica, em linguagem clara e sem juridiquês desnecessário, como lidamos com os dados de quem visita nosso site.</p>
+
+  <h2>1. Quem somos</h2>
+  <p>O Guia Med é um projeto independente mantido por duas pessoas — um estudante de medicina (conteúdo) e um desenvolvedor (tecnologia). Nosso site é uma plataforma gratuita de guias e resumos para estudantes de medicina. Não temos CNPJ, não vendemos assinaturas e não armazenamos dados em servidores externos.</p>
+
+  <h2>2. Quais informações coletamos</h2>
+  <p>Nosso site é <strong>estático</strong> (HTML, CSS e JavaScript puro). Isso significa que <strong>não temos banco de dados nem servidor</strong> que armazene informações suas remotamente. Tudo que você faz no site fica salvo apenas no <strong>seu próprio navegador</strong>, via localStorage. Nós não temos acesso a esses dados.</p>
+  <p>Especificamente, quando você cria uma conta ou interage com o site, o navegador pode armazenar localmente:</p>
+  <ul>
+    <li><strong>Dados de cadastro:</strong> nome, e-mail e senha (esta última em formato hash, ou seja, embaralhada de forma irreversível).</li>
+    <li><strong>Preferências:</strong> tema escuro ou claro, guias favoritados, histórico de leitura.</li>
+    <li><strong>Sessão:</strong> um token temporário que mantém você logado por 7 dias.</li>
+  </ul>
+  <p>Nada disso é enviado para nós ou para terceiros. Fica exclusivamente no seu dispositivo.</p>
+
+  <h2>3. Uso de cookies e tecnologias similares</h2>
+  <p>O Guia Med <strong>não utiliza cookies próprios</strong> para rastreamento. O localStorage que usamos para salvar suas preferências e conta é uma tecnologia diferente de cookies e não é enviada automaticamente em requisições ao servidor (até porque não temos servidor).</p>
+  <p><strong>No futuro</strong>, quando implementarmos anúncios via Google AdSense, o Google poderá utilizar cookies de terceiros para exibir anúncios personalizados. Quando isso acontecer, esta política será atualizada e um banner de consentimento será exibido, conforme exige a LGPD.</p>
+
+  <h2>4. Anúncios (Google AdSense — plano futuro)</h2>
+  <p>Atualmente <strong>não exibimos anúncios</strong>. Quando isso mudar, utilizaremos o Google AdSense, que pode coletar dados anonimizados para personalização de anúncios. Você poderá gerenciar suas preferências de anúncios diretamente nas <a href="https://adssettings.google.com" target="_blank" rel="noopener" style="color:var(--vital-dark); font-weight:600;">Configurações de anúncios do Google</a>. Atualizaremos esta seção antes de qualquer ativação de anúncios.</p>
+
+  <h2>5. Compartilhamento de dados</h2>
+  <p><strong>Não compartilhamos, vendemos ou alugamos</strong> qualquer informação — até porque, como explicado, não temos acesso aos dados que ficam no seu navegador. Se um dia isso mudar (por exemplo, ao implementarmos um backend de verdade), você será avisado com antecedência e terá a opção de consentir ou não.</p>
+
+  <h2>6. Links para sites externos</h2>
+  <p>Nossos guias podem conter links para fontes científicas, diretrizes médicas ou referências externas. Não nos responsabilizamos pelas práticas de privacidade desses sites. Sempre verifique a política de privacidade do destino antes de compartilhar dados pessoais.</p>
+
+  <h2>7. Segurança dos dados</h2>
+  <p>Como seus dados ficam apenas no seu dispositivo, a segurança depende principalmente de você: mantenha seu navegador atualizado, não compartilhe seu dispositivo com pessoas não confiáveis e evite salvar senhas em computadores públicos. A senha que você cadastra é transformada em hash (SHA-256 com salt) antes de ser armazenada — nem nós conseguiríamos recuperá-la em texto puro.</p>
+
+  <h2>8. Seus direitos (LGPD)</h2>
+  <p>De acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</p>
+  <ul>
+    <li>Saber quais dados são coletados (esta política cobre isso).</li>
+    <li>Acessar, corrigir ou excluir seus dados.</li>
+    <li>Revogar seu consentimento a qualquer momento.</li>
+  </ul>
+  <p>Como os dados ficam no seu navegador, você mesmo pode exercer esses direitos a qualquer momento:</p>
+  <ul>
+    <li>Para <strong>excluir sua conta</strong>: vá até a página de perfil, abra o console do navegador (F12), execute <code style="background:var(--bg); padding:2px 6px; border-radius:4px; font-family:var(--font-mono); font-size:.85rem;">localStorage.clear()</code> e recarregue a página.</li>
+    <li>Para <strong>corrigir seus dados</strong>: infelizmente ainda não implementamos edição de perfil. Por enquanto, exclua a conta e crie uma nova com os dados corretos.</li>
+  </ul>
+
+  <h2>9. Menores de idade</h2>
+  <p>Nossos conteúdos são voltados para estudantes universitários de medicina, tipicamente maiores de 18 anos. Não coletamos intencionalmente dados de menores de 13 anos. Se você é responsável por um menor que forneceu dados sem seu consentimento, entre em contato para orientação.</p>
+
+  <h2>10. Alterações nesta política</h2>
+  <p>Podemos atualizar esta política conforme o site evolui. A data da última atualização sempre estará no topo da página. Se fizermos mudanças significativas, colocaremos um aviso visível na página inicial por pelo menos 7 dias.</p>
+
+  <h2>11. Contato</h2>
+  <p>Dúvidas, solicitações ou aquele feedback sincero? Escreva para a gente na <a href="contato.html" style="color:var(--vital-dark); font-weight:600;">página de contato</a> ou diretamente no e-mail <strong>contato@guiamed.com.br</strong> (endereço de exemplo — troque pelo e-mail real de vocês).</p>
+
+  <div class="aviso">
+    <strong>Resumindo em uma frase:</strong> não coletamos seus dados em servidor nenhum. Tudo que você faz no site fica salvo só no seu navegador. Quando isso mudar, você será o primeiro a saber.
+  </div>
+</div>
+
+<footer class="site-footer">
+  <nav>
+    <a href="sobre.html">Sobre</a>
+    <a href="privacidade.html">Política de Privacidade</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <span class="copyright">© 2026 Guia Med. Todos os direitos reservados.</span>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+</body>
+</html>
