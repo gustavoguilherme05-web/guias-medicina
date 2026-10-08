@@ -28,7 +28,7 @@
 
 <div class="page-header">
   <h1>Fale com a gente</h1>
-  <p>Dúvidas, sugestões de temas ou correções em algum guia? Manda pra cá.</p>
+  <p>Dúvidas, sugestões de temas ou correções em algum guia? Manda pra cá!</p>
 </div>
 
 <div class="contato-grid">
@@ -82,7 +82,7 @@
     </div>
     <div class="aside-card">
       <h4>Prefere e-mail direto?</h4>
-      <p>Escreva para <strong>contato@guiamed.com.br</strong> (endereço de exemplo — troque pelo e-mail real de vocês).</p>
+      <p>Escreva para <strong>gustavoguilherme05@gmail.com</strong></p>
     </div>
   </aside>
 </div>
@@ -93,11 +93,12 @@
     <a href="privacidade.html">Política de Privacidade</a>
     <a href="contato.html">Contato</a>
   </nav>
-  <span class="copyright">© 2026 Guia Med. Todos os direitos reservados.</span>
+  <span class="copyright">© 2026 PAD. Todos os direitos reservados.</span>
 </footer>
 
 <button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
 
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script src="auth.js"></script>
 <script src="script.js"></script>
 <script>
@@ -125,9 +126,13 @@
      sem precisar de app de e-mail no aparelho do visitante.
      ========================================================= */
 
-  const EMAILJS_PUBLIC_KEY  = null; // ex: 'a1B2c3D4...'
-  const EMAILJS_SERVICE_ID  = null; // ex: 'service_guiamed'
-  const EMAILJS_TEMPLATE_ID = null; // ex: 'template_contato'
+  const EMAILJS_PUBLIC_KEY  = 'P4hcwxVQ--Yu2mPeY';
+  const EMAILJS_SERVICE_ID  = 'service_ieu3zqx';
+  const EMAILJS_TEMPLATE_ID = 'template_i6elpun';
+
+  if (window.emailjs) {
+    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+  }
 
   const form = document.getElementById('formContato');
   const contador = document.getElementById('ctContador');
@@ -179,25 +184,33 @@
 
     if(!validarFormulario()) return;
 
+    const nome = document.getElementById('ctNome').value.trim();
+    const email = document.getElementById('ctEmail').value.trim();
+    const assunto = document.getElementById('ctAssunto').value;
+    const mensagem = textarea.value.trim();
+
     const dados = {
-      nome: document.getElementById('ctNome').value.trim(),
-      email: document.getElementById('ctEmail').value.trim(),
-      assunto: document.getElementById('ctAssunto').value,
-      mensagem: textarea.value.trim()
+      nome,
+      email,
+      assunto,
+      mensagem,
+      from_name: nome,
+      reply_to: email,
+      subject: assunto,
+      message: mensagem
     };
 
     btnEnviar.disabled = true;
     btnEnviar.textContent = 'Enviando...';
 
     if(EMAILJS_PUBLIC_KEY && EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID){
-      // OPÇÃO B: envio real via EmailJS (requer <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser/dist/email.min.js"> incluído no <head>)
       try{
-        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, dados, EMAILJS_PUBLIC_KEY);
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, dados);
         mostrarToast('Mensagem enviada com sucesso!', 'sucesso');
         form.reset(); contador.textContent = '0';
       }catch(err){
-        console.error(err);
-        mostrarToast('Não foi possível enviar agora. Tente novamente.', 'erro');
+        console.error('EmailJS error:', err);
+        mostrarToast('Não foi possível enviar agora. Verifique as variáveis do template do EmailJS.', 'erro');
       }
     } else {
       // OPÇÃO A (ativa por padrão): abre o cliente de e-mail do usuário

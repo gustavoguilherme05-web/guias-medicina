@@ -117,7 +117,12 @@ function renderizarFeed(artigos){
   lista.innerHTML = '';
 
   if(visiveis.length === 0){
-    lista.innerHTML = '<li>Nenhum guia encontrado para essa busca.</li>';
+    lista.innerHTML = `
+      <li class="empty-state">
+        Nenhum guia encontrado para essa busca.<br>
+        <small>Tente outra palavra-chave, tag ou termo relacionado.</small>
+      </li>
+    `;
   }
 
   const sessao = (typeof getSessaoAtiva === 'function') ? getSessaoAtiva() : null;
@@ -195,8 +200,20 @@ function carregarDestaques(artigos){
 function buscarArtigos(){
   const input = document.getElementById('searchInput');
   if(!input) return;
+
+  input.addEventListener('focus', () => {
+    const feed = document.getElementById('feed');
+    if(feed && window.location.pathname.endsWith('index.html')){
+      feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  });
+
   input.addEventListener('input', () => {
     ITENS_VISIVEIS = 4;
+    const feed = document.getElementById('feed');
+    if(input.value.trim().length > 0 && feed){
+      feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
     renderizarFeed(TODOS_ARTIGOS);
   });
 }

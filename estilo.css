@@ -45,14 +45,16 @@ button{ font-family: inherit; cursor:pointer; }
 
 /* ---------- ECG signature divider ---------- */
 .ecg-divider{
-  width:100%; height:22px; margin: 0 0 8px;
+  width:100%; height:30px; margin: 0 0 10px;
   color: var(--vital);
+  display:block;
 }
 .ecg-divider path{
-  fill:none; stroke:currentColor; stroke-width:2;
+  fill:none; stroke:currentColor; stroke-width:2.9;
   stroke-linecap:round; stroke-linejoin:round;
-  stroke-dasharray: 300; stroke-dashoffset: 300;
+  stroke-dasharray: 520; stroke-dashoffset: 520;
   animation: draw 1.4s ease forwards;
+  filter: drop-shadow(0 0 0 rgba(31,122,103,.15));
 }
 @keyframes draw{ to{ stroke-dashoffset:0; } }
 @media (prefers-reduced-motion: reduce){
@@ -94,6 +96,12 @@ button{ font-family: inherit; cursor:pointer; }
   background: var(--surface); border:1px solid var(--line);
   border-radius: 999px; padding: 6px 14px;
   min-width: 220px;
+  transition: border-color var(--ease), box-shadow var(--ease), transform var(--ease);
+}
+.search-box:focus-within{
+  border-color: var(--vital);
+  box-shadow: 0 0 0 4px rgba(31,122,103,.10);
+  transform: translateY(-1px);
 }
 .search-box input{
   border:none; outline:none; background:transparent;
@@ -203,6 +211,23 @@ button{ font-family: inherit; cursor:pointer; }
   transition: background var(--ease), color var(--ease);
 }
 .ler-btn:hover{ background: var(--vital); color:#fff; }
+
+.empty-state{
+  background: rgba(31,122,103,.04);
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  padding: 20px 18px;
+  color: var(--ink-soft);
+  font-size: .95rem;
+  text-align: center;
+  list-style: none;
+}
+.empty-state small{
+  display: block;
+  margin-top: 6px;
+  color: var(--ink-soft);
+  opacity: .8;
+}
 
 .load-more{
   display:block; margin: 24px auto 0; text-align:center;
