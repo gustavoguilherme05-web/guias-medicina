@@ -373,6 +373,95 @@ body.dark{
 }
 .user-chip button:hover{ background: var(--amber-soft); color: var(--vital-dark); }
 
+/* ---------- Treino de prescrição ---------- */
+.prescricao-wrapper{
+  max-width: 900px;
+  min-height: calc(100vh - 300px);
+  margin: 0 auto;
+  padding: 32px 20px 64px;
+}
+.prescricao-heading{ text-align:center; margin: 24px auto 32px; }
+.prescricao-heading h1{
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  margin: 16px 0 8px;
+}
+.prescricao-heading p{ color:var(--ink-soft); max-width:640px; margin:0 auto; }
+.prescricao-form{ display:grid; gap:18px; }
+.prescricao-card, .prescricao-result{
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  padding:24px;
+}
+.prescricao-card label, .prescricao-result h2{
+  display:block;
+  font-family:var(--font-display);
+  font-size:1.3rem;
+  font-weight:700;
+  margin:0 0 6px;
+}
+.prescricao-card select{
+  display:block;
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  background:var(--bg);
+  color:var(--ink);
+  font:inherit;
+  margin-bottom:18px;
+}
+.prescricao-card select:focus{
+  outline:2px solid var(--vital);
+  outline-offset:1px;
+}
+.prescricao-hint{ color:var(--ink-soft); font-size:.9rem; margin:0 0 12px; }
+.caso-clinico-detalhes{
+  display:grid;
+  gap:14px;
+  border-top:1px solid var(--line);
+  padding-top:18px;
+}
+.caso-clinico-detalhes h3{
+  font-size:1rem;
+  margin:0 0 5px;
+}
+.caso-clinico-detalhes p, .caso-clinico-detalhes ul{
+  color:var(--ink-soft);
+  line-height:1.6;
+  margin:0;
+}
+.caso-clinico-detalhes ul{ padding-left:20px; }
+.prescricao-card textarea{
+  display:block;
+  width:100%;
+  min-height:150px;
+  resize:vertical;
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  background:var(--bg);
+  color:var(--ink);
+  font:inherit;
+  line-height:1.55;
+}
+.prescricao-card textarea:focus{
+  outline:2px solid var(--vital);
+  outline-offset:1px;
+}
+.prescricao-actions{ display:grid; justify-items:start; gap:14px; }
+.prescricao-disclaimer{ color:var(--ink-soft); font-size:.82rem; margin:0; }
+.prescricao-actions .btn:disabled{ cursor:wait; opacity:.7; }
+.prescricao-result{ margin-top:28px; border-left:4px solid var(--vital); }
+.prescricao-result h2{ margin-bottom:10px; }
+.prescricao-result p{ color:var(--ink-soft); font-size:.9rem; }
+.prescricao-result.has-error{ border-left-color:#B54736; }
+.prescricao-result.has-error p{ color:#B54736; }
+.prescricao-analysis{ white-space:pre-wrap; line-height:1.7; overflow-wrap:anywhere; }
+body.dark .prescricao-result.has-error p{ color:#F09A8B; }
+
 /* ---------- Página de autenticação (login/cadastro) ---------- */
 
 .auth-wrapper{

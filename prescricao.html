@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Treine a elaboração de prescrições em casos clínicos simulados e receba feedback educacional.">
+<title>Treino de prescrição — PAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">PAD</a>
+    <button class="menu-toggle icon-btn" id="menuToggle" aria-label="Abrir menu">☰</button>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="index.html">Início</a></li>
+      <li><a href="index.html#feed">Guias</a></li>
+      <li><a href="prescricao.html" aria-current="page">Prescrição</a></li>
+      <li><a href="sobre.html">Sobre</a></li>
+      <li><a href="contato.html">Contato</a></li>
+    </ul>
+    <button class="icon-btn" id="darkToggle" title="Alternar modo escuro" aria-label="Alternar modo escuro">🌙</button>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<main class="prescricao-wrapper">
+  <a href="index.html" class="voltar-link">← Voltar para o início</a>
+  <header class="prescricao-heading">
+    <span class="hero-eyebrow">Prática educacional</span>
+    <h1>Treino de prescrição</h1>
+    <p>Analise o caso clínico e escreva sua prescrição. A IA vai fornecer um feedback para apoiar seus estudos.</p>
+  </header>
+
+  <form class="prescricao-form" id="prescricaoForm">
+    <section class="prescricao-card">
+      <label for="casoSelecionado">Escolha um caso clínico</label>
+      <p class="prescricao-hint">Leia o caso selecionado e elabore a prescrição correspondente.</p>
+      <select id="casoSelecionado" name="casoSelecionado" required></select>
+      <div class="caso-clinico-detalhes" id="casoClinicoDetalhes" aria-live="polite"></div>
+    </section>
+
+    <section class="prescricao-card">
+      <label for="prescricaoAluno">Sua prescrição</label>
+      <p class="prescricao-hint">Inclua os itens necessários para a conduta proposta, como medicamento, dose, via e frequência.</p>
+      <textarea id="prescricaoAluno" name="prescricaoAluno" rows="10" required
+        placeholder="Escreva sua prescrição aqui..."></textarea>
+    </section>
+
+    <div class="prescricao-actions">
+      <p class="prescricao-disclaimer">Exercício de estudo: o feedback da IA pode conter erros e não substitui protocolos institucionais nem a supervisão de um profissional responsável.</p>
+      <button class="btn btn-primary" type="submit" id="analisarPrescricao">Analisar prescrição</button>
+    </div>
+  </form>
+
+  <section class="prescricao-result" id="prescricaoResult" aria-live="polite" hidden>
+    <h2>Feedback da análise</h2>
+    <p id="prescricaoStatus" role="status"></p>
+    <div class="prescricao-analysis" id="prescricaoAnalysis"></div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="sobre.html">Sobre</a>
+    <a href="privacidade.html">Política de Privacidade</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <span class="copyright">© 2026 PAD. Todos os direitos reservados.</span>
+</footer>
+
+<button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
+
+<script src="auth.js"></script>
+<script src="script.js"></script>
+<script src="prescricao-ui.js"></script>
+</body>
+</html>
