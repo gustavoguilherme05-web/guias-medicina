@@ -145,8 +145,8 @@ function renderizarFeed(artigos){
       </ul>
       <div class="feed-footer">
         <div class="feed-footer-row">
-          <span class="duracao">⏱ ${a.duracao}</span>
-          <button class="fav-btn ${favoritos.includes(a.id) ? 'active' : ''}" data-id="${a.id}" type="button" title="Favoritar">♥</button>
+          <span class="duracao">&#x23F1; ${a.duracao}</span>
+          <button class="fav-btn ${favoritos.includes(a.id) ? 'active' : ''}" data-id="${a.id}" type="button" title="Favoritar">&#x2665;</button>
         </div>
         <a href="artigo.html?id=${a.id}" class="ler-btn">Ler tópico →</a>
       </div>
@@ -247,8 +247,8 @@ async function exibirArtigo(){
       <div class="artigo-meta">
         <span>${artigo.tipo}</span>
         <span>${artigo.data}</span>
-        <span>⏱ ${artigo.duracao}</span>
-        <button class="fav-btn ${jaFavoritado ? 'active' : ''}" id="favBtnArtigo" type="button" title="Favoritar">♥</button>
+        <span>&#x23F1; ${artigo.duracao}</span>
+        <button class="fav-btn ${jaFavoritado ? 'active' : ''}" id="favBtnArtigo" type="button" title="Favoritar">&#x2665;</button>
       </div>
       <h1>${artigo.titulo}</h1>
       <div class="artigo-corpo">${artigo.conteudo}</div>
