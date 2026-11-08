@@ -9,6 +9,52 @@ let TODOS_ARTIGOS = [];   // cache em memória depois do primeiro fetch
 let TAG_ATIVA = null;     // tag selecionada nos filtros, ou null = todas
 let ITENS_VISIVEIS = 4;   // paginação simples do "Ver todos os tópicos"
 
+async function avaliarPrescricao() {
+  const prescricaoTexto = document.getElementById("prescricao-aluno").value.trim();
+  const painelResultado = document.getElementById("painel-resultado");
+  const conteudoFeedback = document.getElementById("conteudo-feedback");
+  const botao = document.getElementById("btn-avaliar");
+
+ ------- api de prescriçao------------
+  if (!prescricaoTexto) {
+    alert("Por favor, digite a sua prescrição antes de enviar.");
+    return;
+  }
+
+  // Prepara estado de carregamento
+  botao.disabled = true;
+  botao.innerText = "Analisando com a diretriz...";
+  painelResultado.classList.add("resultado-visivel");
+  conteudoFeedback.innerText = "Carregando avaliação médica...";
+
+  const casoClinicoExemplo = "Paciente de 24 anos chega ao PA com dispneia intensa, fala entrecortada e sibilando difusamente. SatO2: 89% em ar ambiente, FR: 32 irpm, FC: 125 bpm.";
+
+  try {
+    const response = await fetch("/api/prescricao", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        casoClinico: casoClinicoExemplo,
+        prescricaoAluno: prescricaoTexto
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.error) {
+      conteudoFeedback.innerText = `Erro: ${data.error}`;
+    } else {
+      // Exibe o feedback retornado pela IA
+      conteudoFeedback.innerText = data.analise;
+    }
+  } catch (error) {
+    conteudoFeedback.innerText = "Erro ao conectar com o servidor. Verifique sua conexão ou a rota da API.";
+  } finally {
+    botao.disabled = false;
+    botao.innerText = "Avaliar Prescrição";
+  }
+}
+
 /* ---------- Utilidades de estado local ---------- */
 
 function getVistos(){

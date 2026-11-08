@@ -2,6 +2,31 @@
 <html lang="pt-br">
 <head>
 
+  <section class="container-prescricao">
+  <h2>Simulador de Prescrição Médica</h2>
+  
+  <div class="card-caso">
+    <h3>Caso Clínico: Crise Asmática Grave em Adulto</h3>
+    <p>Paciente de 24 anos chega ao PA com dispneia intensa, fala entrecortada e sibilando difusamente. SatO2: 89% em ar ambiente, FR: 32 irpm, FC: 125 bpm.</p>
+  </div>
+
+  <div class="grupo-input">
+    <label for="prescricao-aluno">Digite sua prescrição completa:</label>
+    <textarea 
+      id="prescricao-aluno" 
+      rows="6" 
+      placeholder="Ex: 1. Salbutamol spray 100mcg - aplicar 4 jatos via inalatória..."
+    ></textarea>
+  </div>
+
+  <button id="btn-avaliar" onclick="avaliarPrescricao()">Avaliar Prescrição</button>
+
+  <div id="painel-resultado" class="resultado-oculto">
+    <h3>Feedback do Preceptor</h3>
+    <div id="conteudo-feedback"></div>
+  </div>
+</section>
+
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y34M99Z326"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
