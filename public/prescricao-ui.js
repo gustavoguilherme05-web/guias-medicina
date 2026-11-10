@@ -1,5 +1,115 @@
 const CASOS_CLINICOS = [
   {
+    id: 'amigdalite-bacteriana-aguda',
+    titulo: 'Amigdalite bacteriana aguda',
+    secoes: [
+      {
+        titulo: 'Identificação e história',
+        texto: 'Paciente de 19 anos, sexo feminino, com dor de garganta intensa há 2 dias, febre (38,8 °C) e odinofagia. Nega alergias conhecidas.'
+      },
+      {
+        titulo: 'Exame físico',
+        itens: [
+          'Oroscopia: hiperemia acentuada de orofaringe com exsudato purulento folicular em ambas as amígdalas.',
+          'Linfonodos submandibulares aumentados e dolorosos bilateralmente.',
+          'Ausculta cardiopulmonar sem alterações.'
+        ]
+      },
+      {
+        titulo: 'Objetivo da prescrição',
+        texto: 'Propor tratamento de primeira linha para provável faringoamigdalite estreptocócica (ex.: amoxicilina), além de analgesia e antitérmico.'
+      }
+    ]
+  },
+  {
+    id: 'hipertensao-inicio-tratamento',
+    titulo: 'Hipertensão arterial — início de tratamento',
+    secoes: [
+      {
+        titulo: 'Identificação e história',
+        texto: 'Paciente de 52 anos, sexo masculino, assintomático, sem comorbidades prévias ou lesões de órgão-alvo. Traz diário de pressão arterial de 2 semanas com médias de 148/92 mmHg.'
+      },
+      {
+        titulo: 'Exame físico e exames',
+        itens: [
+          'PA em consulta: 150/94 mmHg, confirmada em ambos os braços.',
+          'IMC: 28 kg/m².',
+          'Função renal e eletrólitos normais; ECG sem sinais de hipertrofia ventricular esquerda.'
+        ]
+      },
+      {
+        titulo: 'Objetivo da prescrição',
+        texto: 'Iniciar monoterapia anti-hipertensiva em dose inicial apropriada (ex.: enalapril, losartana ou hidroclorotiazida) e orientar medidas não farmacológicas.'
+      }
+    ]
+  },
+  {
+    id: 'exacerbacao-leve-asma',
+    titulo: 'Exacerbação leve de asma',
+    secoes: [
+      {
+        titulo: 'Identificação e história',
+        texto: 'Paciente de 24 anos, sexo feminino, com asma conhecida, relata piora da falta de ar e chiado após exposição a mofo no final de semana. Usava corticoide inalatório de manutenção, mas interrompeu o uso no último mês.'
+      },
+      {
+        titulo: 'Exame físico',
+        itens: [
+          'SpO₂ em ar ambiente: 96%; FC: 92 bpm; FR: 22 irpm.',
+          'Murmúrio vesicular presente com sibilos expiratórios difusos.',
+          'Sem tiragem intercostal ou uso de musculatura acessória.'
+        ]
+      },
+      {
+        titulo: 'Objetivo da prescrição',
+        texto: 'Prescrever broncodilatador inalatório de resgate (ex.: salbutamol), orientar a retomada do tratamento de manutenção e indicar sinais de alarme.'
+      }
+    ]
+  },
+  {
+    id: 'gastroenterite-desidratacao-leve',
+    titulo: 'Gastroenterite aguda com desidratação leve',
+    secoes: [
+      {
+        titulo: 'Identificação e história',
+        texto: 'Paciente de 30 anos, sexo masculino, com 5 episódios de diarreia aquosa e 2 episódios de vômito nas últimas 24 horas. Relata sede aumentada e cansaço.'
+      },
+      {
+        titulo: 'Exame físico',
+        itens: [
+          'Mucosas levemente secas, turgor cutâneo preservado.',
+          'PA: 110/70 mmHg; FC: 88 bpm.',
+          'Abdômen ruidoso, doloroso difusamente à palpação profunda, sem sinais de peritonite.'
+        ]
+      },
+      {
+        titulo: 'Objetivo da prescrição',
+        texto: 'Prescrever sais de reidratação oral, considerar sintomáticos com segurança e orientar dieta, hidratação e sinais de alarme. Evitar antibiótico empírico.'
+      }
+    ]
+  },
+  {
+    id: 'cistite-nao-complicada-28',
+    titulo: 'Cistite aguda não complicada',
+    secoes: [
+      {
+        titulo: 'Identificação e história',
+        texto: 'Paciente de 28 anos, sexo feminino, com disúria, polaciúria, urgência miccional e desconforto suprapúbico há 3 dias. Sem febre, dor lombar ou corrimento vaginal.'
+      },
+      {
+        titulo: 'Exame físico',
+        itens: [
+          'Sinais vitais normais; temperatura: 36,5 °C.',
+          'Dor leve à palpação em região hipogástrica.',
+          'Sinal de Giordano negativo.'
+        ]
+      },
+      {
+        titulo: 'Objetivo da prescrição',
+        texto: 'Prescrever opção antimicrobiana indicada para cistite aguda não complicada (ex.: nitrofurantoína, fosfomicina ou sulfametoxazol-trimetoprima) e analgesia urinária, se necessária.'
+      }
+    ]
+  },
+  {
     id: 'itu-nao-complicada',
     titulo: 'Disúria em mulher jovem',
     secoes: [
@@ -104,6 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          casoId: caso.id,
           prescricaoAluno: form.elements.prescricaoAluno.value.trim()
         })
       });
