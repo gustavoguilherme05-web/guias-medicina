@@ -60,16 +60,18 @@ export async function hashPassword(password, salt) {
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
-    "PBKDF2",
+    { name: "PBKDF2" }, // Passando como objeto por segurança de compatibilidade
     false,
     ["deriveBits"]
   );
+  
   const bits = await crypto.subtle.deriveBits({
     name: "PBKDF2",
     salt: hexToBytes(salt),
-    iterations: 310000,
+    iterations: 15000, // Reduzido para caber no limite de 10-50ms do Cloudflare!
     hash: "SHA-256"
   }, key, 256);
+  
   return bytesToHex(new Uint8Array(bits));
 }
 
