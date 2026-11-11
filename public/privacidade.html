@@ -37,53 +37,48 @@
 
 <div class="page-header">
   <h1>Política de Privacidade</h1>
-  <p>Última atualização: 6 de julho de 2026</p>
+  <p>Última atualização: 10 de novembro de 2026</p>
 </div>
 
 <div class="page-content">
   <p>No <strong>PAD</strong>, acreditamos que transparência é tão importante quanto um bom diagnóstico. Esta política explica, em linguagem clara e sem juridiquês desnecessário, como lidamos com os dados de quem visita nosso site.</p>
 
   <h2>1. Quem somos</h2>
-  <p>O PAD é um projeto independente mantido por duas pessoas — um estudante de medicina (conteúdo) e um desenvolvedor (tecnologia). Nosso site é uma plataforma gratuita de guias e resumos para estudantes de medicina. Não temos CNPJ, não vendemos assinaturas e não armazenamos dados em servidores externos.</p>
+  <p>O PAD é um projeto independente mantido por duas pessoas — um estudante de medicina (conteúdo) e um desenvolvedor (tecnologia). Nosso site é uma plataforma gratuita de guias e resumos para estudantes de medicina.</p>
 
   <h2>2. Quais informações coletamos</h2>
-  <p>Nosso site é <strong>estático</strong> (HTML, CSS e JavaScript puro). Isso significa que <strong>não temos banco de dados nem servidor</strong> que armazene informações suas remotamente. Tudo que você faz no site fica salvo apenas no <strong>seu próprio navegador</strong>, via localStorage. Nós não temos acesso a esses dados.</p>
-  <p>Especificamente, quando você cria uma conta ou interage com o site, o navegador pode armazenar localmente:</p>
+  <p>Quando você cria uma conta ou participa das discussões, armazenamos em banco de dados hospedado na Cloudflare:</p>
   <ul>
-    <li><strong>Dados de cadastro:</strong> nome, e-mail e senha (esta última em formato hash, ou seja, embaralhada de forma irreversível).</li>
-    <li><strong>Preferências:</strong> tema escuro ou claro, guias favoritados, histórico de leitura.</li>
-    <li><strong>Sessão:</strong> um token temporário que mantém você logado por 7 dias.</li>
+    <li><strong>Conta:</strong> nome, e-mail, hash da senha com salt e data de criação. A senha em texto puro não é armazenada.</li>
+    <li><strong>Sessão:</strong> um identificador aleatório em cookie protegido, com validade de até 7 dias; no banco, armazenamos apenas o hash do identificador e sua expiração.</li>
+    <li><strong>Comentários:</strong> texto, diretriz relacionada, nome exibido e data de publicação. Comentários são públicos para qualquer visitante.</li>
+    <li><strong>Preferências locais:</strong> tema, favoritos e histórico de leitura podem permanecer no armazenamento local do seu navegador.</li>
   </ul>
-  <p>Nada disso é enviado para nós ou para terceiros. Fica exclusivamente no seu dispositivo.</p>
+  <p>Não inclua nomes, dados identificáveis ou informações pessoais de pacientes nas discussões. Evite também publicar outros dados pessoais que não queira tornar públicos.</p>
 
   <h2>3. Uso de cookies e tecnologias similares</h2>
-  <p>O PAD <strong>não utiliza cookies próprios</strong> para rastreamento. O localStorage que usamos para salvar suas preferências e conta é uma tecnologia diferente de cookies e não é enviada automaticamente em requisições ao servidor (até porque não temos servidor).</p>
-  <p><strong>No futuro</strong>, quando implementarmos anúncios via Google AdSense, o Google poderá utilizar cookies de terceiros para exibir anúncios personalizados. Quando isso acontecer, esta política será atualizada e um banner de consentimento será exibido, conforme exige a LGPD.</p>
+  <p>Usamos um cookie próprio, HttpOnly, Secure e SameSite, exclusivamente para manter a sessão de login. Ele não é usado para rastreamento. Preferências como tema podem ser guardadas no localStorage do navegador.</p>
+  <p>O site também carrega Google Analytics; esse serviço pode usar tecnologias próprias para medir o uso do site. Consulte as informações de privacidade do Google para saber mais.</p>
 
-  <h2>4. Anúncios (Google AdSense — plano futuro)</h2>
-  <p>Atualmente <strong>não exibimos anúncios</strong>. Quando isso mudar, utilizaremos o Google AdSense, que pode coletar dados anonimizados para personalização de anúncios. Você poderá gerenciar suas preferências de anúncios diretamente nas <a href="https://adssettings.google.com" target="_blank" rel="noopener" style="color:var(--vital-dark); font-weight:600;">Configurações de anúncios do Google</a>. Atualizaremos esta seção antes de qualquer ativação de anúncios.</p>
+  <h2>4. Anúncios</h2>
+  <p>Se anúncios de terceiros forem ativados, esta política será atualizada para explicar as tecnologias e os dados envolvidos.</p>
 
   <h2>5. Compartilhamento de dados</h2>
-  <p><strong>Não compartilhamos, vendemos ou alugamos</strong> qualquer informação — até porque, como explicado, não temos acesso aos dados que ficam no seu navegador. Se um dia isso mudar (por exemplo, ao implementarmos um backend de verdade), você será avisado com antecedência e terá a opção de consentir ou não.</p>
+  <p>O serviço de hospedagem, banco de dados e execução do site é fornecido pela Cloudflare, que processa dados para disponibilizar a plataforma. Comentários e nome de exibição ficam visíveis publicamente. Não vendemos dados pessoais.</p>
 
   <h2>6. Links para sites externos</h2>
   <p>Nossos guias podem conter links para fontes científicas, diretrizes médicas ou referências externas. Não nos responsabilizamos pelas práticas de privacidade desses sites. Sempre verifique a política de privacidade do destino antes de compartilhar dados pessoais.</p>
 
   <h2>7. Segurança dos dados</h2>
-  <p>Como seus dados ficam apenas no seu dispositivo, a segurança depende principalmente de você: mantenha seu navegador atualizado, não compartilhe seu dispositivo com pessoas não confiáveis e evite salvar senhas em computadores públicos. A senha que você cadastra é transformada em hash (SHA-256 com salt) antes de ser armazenada — nem nós conseguiríamos recuperá-la em texto puro.</p>
+  <p>As senhas são derivadas com PBKDF2-SHA-256 e salt individual antes de serem armazenadas. As sessões usam cookies HttpOnly e os comentários são exibidos como texto, sem interpretar HTML enviado pelo usuário. Nenhum sistema é totalmente isento de riscos; use uma senha exclusiva e não compartilhe informações clínicas identificáveis.</p>
 
   <h2>8. Seus direitos (LGPD)</h2>
   <p>De acordo com a Lei Geral de Proteção de Dados (Lei nº 13.709/2018), você tem direito a:</p>
   <ul>
-    <li>Saber quais dados são coletados (esta política cobre isso).</li>
-    <li>Acessar, corrigir ou excluir seus dados.</li>
-    <li>Revogar seu consentimento a qualquer momento.</li>
+    <li>Solicitar confirmação, acesso, correção ou exclusão dos dados pessoais.</li>
+    <li>Solicitar informações sobre o tratamento e exercer os demais direitos previstos na legislação aplicável.</li>
   </ul>
-  <p>Como os dados ficam no seu navegador, você mesmo pode exercer esses direitos a qualquer momento:</p>
-  <ul>
-    <li>Para <strong>excluir sua conta</strong>: vá até a página de perfil, abra o console do navegador (F12), execute <code style="background:var(--bg); padding:2px 6px; border-radius:4px; font-family:var(--font-mono); font-size:.85rem;">localStorage.clear()</code> e recarregue a página.</li>
-    <li>Para <strong>corrigir seus dados</strong>: infelizmente ainda não implementamos edição de perfil. Por enquanto, exclua a conta e crie uma nova com os dados corretos.</li>
-  </ul>
+  <p>Para fazer uma solicitação, entre em contato pela <a href="contato.html" style="color:var(--vital-dark); font-weight:600;">página de contato</a>. Apagar dados do navegador remove apenas preferências locais; isso não exclui sua conta nem comentários do banco de dados.</p>
 
   <h2>9. Menores de idade</h2>
   <p>Nossos conteúdos são voltados para estudantes universitários de medicina, tipicamente maiores de 18 anos. Não coletamos intencionalmente dados de menores de 13 anos. Se você é responsável por um menor que forneceu dados sem seu consentimento, entre em contato para orientação.</p>
@@ -95,7 +90,7 @@
   <p>Dúvidas, solicitações ou aquele feedback sincero? Escreva para a gente na <a href="contato.html" style="color:var(--vital-dark); font-weight:600;">página de contato</a><strong></strong></p>
 
   <div class="aviso">
-    <strong>Resumindo em uma frase:</strong> não coletamos seus dados em servidor nenhum. Tudo que você faz no site fica salvo só no seu navegador. Quando isso mudar, você será o primeiro a saber.
+    <strong>Importante:</strong> as discussões são públicas e têm finalidade educacional. Não publique dados identificáveis de pacientes nem use os comentários para compartilhar informações clínicas sigilosas.
   </div>
 </div>
 

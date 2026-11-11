@@ -38,7 +38,7 @@
 <div class="auth-wrapper">
   <div class="auth-card">
     <h1>Bem-vindo(a)</h1>
-    <p class="auth-subtitle">Entre ou crie sua conta gratuita para salvar guias e acompanhar seu progresso.</p>
+    <p class="auth-subtitle">Entre ou crie sua conta gratuita para salvar guias, acompanhar seu progresso e participar das discussões.</p>
 
     <div class="auth-tabs">
       <button class="auth-tab active" id="tabLogin" type="button">Entrar</button>
@@ -149,24 +149,39 @@
     e.preventDefault();
     setErro('loginEmail', 'erroLoginEmail', '');
     setErro('loginSenha', 'erroLoginSenha', '');
+    const botao = formLogin.querySelector('button[type="submit"]');
+    botao.disabled = true;
 
     const email = document.getElementById('loginEmail').value;
     const senha = document.getElementById('loginSenha').value;
 
-    const resultado = await autenticarUsuario({ email, senha });
-    if(!resultado.ok){
-      setErro('loginSenha', 'erroLoginSenha', resultado.erro);
-      mostrarToast(resultado.erro, 'erro');
-      return;
+    try{
+      const resultado = await autenticarUsuario({ email, senha });
+      if(!resultado.ok){
+        setErro('loginSenha', 'erroLoginSenha', resultado.erro);
+        mostrarToast(resultado.erro, 'erro');
+        return;
+      }
+      mostrarToast('Login realizado com sucesso!', 'sucesso');
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      let destino = 'index.html';
+      if(redirect){
+        try{
+          const url = new URL(redirect, window.location.href);
+          if(url.origin === window.location.origin) destino = url.pathname + url.search + url.hash;
+        }catch{}
+      }
+      setTimeout(() => window.location.href = destino, 500);
+    }finally{
+      botao.disabled = false;
     }
-    mostrarToast('Login realizado com sucesso!', 'sucesso');
-    const redirect = new URLSearchParams(window.location.search).get('redirect');
-    setTimeout(() => window.location.href = redirect || 'index.html', 500);
   });
 
   /* ---------- Envio do cadastro ---------- */
   formCadastro.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const botao = formCadastro.querySelector('button[type="submit"]');
+    botao.disabled = true;
     ['erroCadNome','erroCadEmail','erroCadSenha','erroCadSenha2'].forEach(id => {
       document.getElementById(id).classList.remove('show');
     });
@@ -178,19 +193,24 @@
 
     if(senha !== senha2){
       setErro('cadSenha2', 'erroCadSenha2', 'As senhas não coincidem.');
+      botao.disabled = false;
       return;
     }
 
-    const resultado = await cadastrarUsuario({ nome, email, senha });
-    if(!resultado.ok){
-      mostrarToast(resultado.erro, 'erro');
-      if(resultado.erro.includes('e-mail')) setErro('cadEmail', 'erroCadEmail', resultado.erro);
-      if(resultado.erro.includes('senha')) setErro('cadSenha', 'erroCadSenha', resultado.erro);
-      if(resultado.erro.includes('nome')) setErro('cadNome', 'erroCadNome', resultado.erro);
-      return;
+    try{
+      const resultado = await cadastrarUsuario({ nome, email, senha });
+      if(!resultado.ok){
+        mostrarToast(resultado.erro, 'erro');
+        if(resultado.erro.includes('e-mail')) setErro('cadEmail', 'erroCadEmail', resultado.erro);
+        if(resultado.erro.includes('senha')) setErro('cadSenha', 'erroCadSenha', resultado.erro);
+        if(resultado.erro.includes('nome')) setErro('cadNome', 'erroCadNome', resultado.erro);
+        return;
+      }
+      mostrarToast('Conta criada com sucesso! Bem-vindo(a).', 'sucesso');
+      setTimeout(() => window.location.href = 'perfil.html', 600);
+    }finally{
+      botao.disabled = false;
     }
-    mostrarToast('Conta criada com sucesso! Bem-vindo(a).', 'sucesso');
-    setTimeout(() => window.location.href = 'perfil.html', 600);
   });
 </script>
 <script src="script.js"></script>

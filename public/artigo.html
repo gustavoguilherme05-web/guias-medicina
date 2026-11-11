@@ -46,6 +46,35 @@
   <div id="artigoConteudo">
     <p>Carregando guia...</p>
   </div>
+
+  <section class="forum-section" id="forumSection" aria-labelledby="forumTitle" hidden>
+    <header class="forum-header">
+      <div>
+        <span class="forum-eyebrow">Comunidade PAD</span>
+        <h2 id="forumTitle">Discussão da diretriz</h2>
+        <p>Compartilhe dúvidas e experiências relacionadas a este guia.</p>
+      </div>
+    </header>
+
+    <div class="forum-login-notice" id="forumLoginNotice" hidden>
+      <p>Faça login ou cadastre-se para participar da discussão.</p>
+      <a class="btn btn-primary" id="forumLoginLink" href="login.html">Entrar ou criar conta</a>
+    </div>
+
+    <form class="forum-form" id="forumForm" hidden>
+      <label for="forumMessage">Sua mensagem</label>
+      <textarea id="forumMessage" name="message" rows="4" maxlength="2000"
+        placeholder="Escreva sua dúvida ou contribuição..." required></textarea>
+      <div class="forum-form-footer">
+        <p>Não inclua nomes, dados identificáveis ou informações pessoais de pacientes.</p>
+        <span id="forumCharCount">0/2000</span>
+      </div>
+      <button class="btn btn-primary" id="forumSubmit" type="submit">Enviar mensagem</button>
+    </form>
+
+    <p class="forum-status" id="forumStatus" role="status" aria-live="polite"></p>
+    <ol class="forum-comments" id="forumComments" aria-label="Comentários desta diretriz"></ol>
+  </section>
 </main>
 
 <footer class="site-footer">
@@ -61,5 +90,6 @@
 
 <script src="auth.js"></script>
 <script src="script.js"></script>
+<script src="forum.js"></script>
 </body>
 </html>

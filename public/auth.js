@@ -1,133 +1,10 @@
-/* =========================================================
-   Guia Med — auth.js
-   ---------------------------------------------------------
-   Sistema de conta de usuário 100% client-side.
-
-   IMPORTANTE — leia antes de usar em produção:
-   Este site não tem servidor nem banco de dados. Por isso,
-   tudo (usuários, senhas com hash, sessão, favoritos) fica
-   salvo no localStorage do PRÓPRIO NAVEGADOR de quem acessa.
-
-   Isso significa, na prática:
-   - Funciona de verdade: dá pra criar conta, logar, deslogar,
-     proteger páginas e guardar favoritos/histórico por usuário.
-   - NÃO é multi-dispositivo: a conta criada no notebook não
-     aparece no celular, porque não existe um servidor central.
-   - NÃO é seguro para dados sensíveis reais: qualquer pessoa
-     com acesso ao navegador consegue abrir o DevTools e ver
-     os hashes salvos. É adequado para prototipagem, portfólio
-     e uso pessoal — não para uma plataforma com dados de
-     pacientes ou informações sigilosas.
-   - Se um dia vocês quiserem login "de verdade" (multi-
-     dispositivo, seguro, recuperação de senha por e-mail),
-     é necessário um backend de autenticação (ex: Firebase
-     Auth ou Supabase Auth, ambos com planos gratuitos que
-     plugam em poucas linhas nesse mesmo front-end).
-   ========================================================= */
-
-const CHAVE_USUARIOS  = 'guiamed_usuarios';
-const CHAVE_SESSAO    = 'guiamed_sessao';
-const DURACAO_SESSAO_MS = 7 * 24 * 60 * 60 * 1000; // 7 dias
-
-/* ---------- Criptografia leve (hash + salt) ---------- */
-
-function gerarSalt(){
-  const arr = new Uint8Array(16);
-  crypto.getRandomValues(arr);
-  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-async function gerarHash(senha, salt){
-  const encoder = new TextEncoder();
-  const dados = encoder.encode(salt + ':' + senha);
-  const bufferHash = await crypto.subtle.digest('SHA-256', dados);
-  return Array.from(new Uint8Array(bufferHash))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-}
-
-function gerarToken(){
-  const arr = new Uint8Array(24);
-  crypto.getRandomValues(arr);
-  return Array.from(arr).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-/* ---------- Armazenamento de usuários ---------- */
-
-function getUsuarios(){
-  try{ return JSON.parse(localStorage.getItem(CHAVE_USUARIOS) || '{}'); }
-  catch(e){ return {}; }
-}
-function salvarUsuarios(usuarios){
-  localStorage.setItem(CHAVE_USUARIOS, JSON.stringify(usuarios));
-}
-
-function emailValido(email){
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-/* ---------- Cadastro ---------- */
-
-async function cadastrarUsuario({ nome, email, senha }){
-  nome = (nome || '').trim();
-  email = (email || '').trim().toLowerCase();
-
-  if(nome.length < 2) return { ok:false, erro: 'Informe seu nome completo.' };
-  if(!emailValido(email)) return { ok:false, erro: 'Informe um e-mail válido.' };
-  if((senha || '').length < 8) return { ok:false, erro: 'A senha precisa ter pelo menos 8 caracteres.' };
-
-  const usuarios = getUsuarios();
-  if(usuarios[email]) return { ok:false, erro: 'Já existe uma conta com esse e-mail neste navegador.' };
-
-  const salt = gerarSalt();
-  const hash = await gerarHash(senha, salt);
-
-  usuarios[email] = {
-    nome,
-    email,
-    salt,
-    hash,
-    criadoEm: new Date().toISOString()
-  };
-  salvarUsuarios(usuarios);
-
-  criarSessao(email, nome);
-  return { ok:true };
-}
-
-/* ---------- Login ---------- */
-
-async function autenticarUsuario({ email, senha }){
-  email = (email || '').trim().toLowerCase();
-  const usuarios = getUsuarios();
-  const usuario = usuarios[email];
-
-  if(!usuario) return { ok:false, erro: 'E-mail ou senha incorretos.' };
-
-  const hashTentativa = await gerarHash(senha, usuario.salt);
-  if(hashTentativa !== usuario.hash) return { ok:false, erro: 'E-mail ou senha incorretos.' };
-
-  criarSessao(usuario.email, usuario.nome);
-  return { ok:true };
-}
-
-/* ---------- Sessão ---------- */
-
-function criarSessao(email, nome){
-  const sessao = {
-    email, nome,
-    token: gerarToken(),
-    criadoEm: Date.now(),
-    expiraEm: Date.now() + DURACAO_SESSAO_MS
-  };
-  localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
-}
+const CHAVE_SESSAO = 'guiamed_sessao';
+const DURACAO_SESSAO_MS = 7 * 24 * 60 * 60 * 1000;
 
 function getSessaoAtiva(){
   try{
     const sessao = JSON.parse(localStorage.getItem(CHAVE_SESSAO) || 'null');
-    if(!sessao) return null;
-    if(Date.now() > sessao.expiraEm){
+    if(!sessao || Date.now() > sessao.expiraEm){
       localStorage.removeItem(CHAVE_SESSAO);
       return null;
     }
@@ -135,25 +12,108 @@ function getSessaoAtiva(){
   }catch(e){ return null; }
 }
 
-function encerrarSessao(){
-  localStorage.removeItem(CHAVE_SESSAO);
+function removerSessaoLocal(){
+  try{
+    localStorage.removeItem(CHAVE_SESSAO);
+  }catch(error){
+    console.error('Não foi possível limpar a sessão local:', error);
+  }
 }
 
-/* ---------- Proteção de rotas ---------- */
+function salvarSessaoLocal(usuario){
+  const sessao = {
+    email: usuario.email,
+    nome: usuario.name,
+    expiraEm: Date.now() + DURACAO_SESSAO_MS
+  };
+  try{
+    localStorage.setItem(CHAVE_SESSAO, JSON.stringify(sessao));
+  }catch(error){
+    console.error('Não foi possível salvar o cache local da sessão:', error);
+  }
+  renderAuthArea(sessao);
+  return sessao;
+}
 
-// Chame no topo de páginas que exigem login (ex: perfil.html).
-// Redireciona para login.html preservando a página de origem.
+async function validarSessaoServidor(){
+  const response = await fetch('/api/auth/session', { credentials: 'same-origin' });
+  let data;
+  try{
+    data = await response.json();
+  }catch{
+    throw new Error('O servidor retornou uma resposta de sessão inválida.');
+  }
+  if(!response.ok){
+    throw new Error(data?.error || 'Não foi possível validar a sessão.');
+  }
+  if(!data.user){
+    removerSessaoLocal();
+    renderAuthArea(null);
+    return null;
+  }
+  return salvarSessaoLocal(data.user);
+}
+
+async function enviarDadosAutenticacao(endpoint, dados){
+  try{
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(dados)
+    });
+    let data;
+    try{
+      data = await response.json();
+    }catch{
+      return { ok:false, erro:'O servidor retornou uma resposta inválida. Tente novamente.' };
+    }
+    if(!response.ok){
+      return { ok:false, erro:data?.error || 'Não foi possível concluir a solicitação.' };
+    }
+    salvarSessaoLocal(data.user);
+    return { ok:true };
+  }catch{
+    return { ok:false, erro:'Não foi possível conectar ao servidor. Tente novamente.' };
+  }
+}
+
+function cadastrarUsuario({ nome, email, senha }){
+  return enviarDadosAutenticacao('/api/auth/register', { nome, email, senha });
+}
+
+function autenticarUsuario({ email, senha }){
+  return enviarDadosAutenticacao('/api/auth/login', { email, senha });
+}
+
+async function encerrarSessao(){
+  let response;
+  try{
+    response = await fetch('/api/auth/session', {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+  }catch{
+    throw new Error('Não foi possível conectar ao servidor para encerrar a sessão.');
+  }
+
+  if(!response.ok){
+    let data;
+    try{ data = await response.json(); }catch{}
+    throw new Error(data?.error || 'Não foi possível encerrar a sessão.');
+  }
+  removerSessaoLocal();
+}
+
 function exigirLogin(){
   const sessao = getSessaoAtiva();
   if(!sessao){
-    const destino = encodeURIComponent(window.location.pathname.split('/').pop());
+    const destino = encodeURIComponent(window.location.pathname.split('/').pop() + window.location.search);
     window.location.href = 'login.html?redirect=' + destino;
     return null;
   }
   return sessao;
 }
-
-/* ---------- Favoritos e histórico por usuário ---------- */
 
 function chaveFavoritos(email){ return 'guiamed_favoritos_' + email; }
 function chaveVistos(email){ return 'guiamed_vistos_' + (email || 'anon'); }
@@ -174,8 +134,6 @@ function toggleFavorito(email, idArtigo){
   return favoritos.includes(idArtigo);
 }
 
-/* ---------- Toasts (avisos rápidos na tela) ---------- */
-
 function mostrarToast(mensagem, tipo = 'info'){
   let container = document.getElementById('toastContainer');
   if(!container){
@@ -191,36 +149,57 @@ function mostrarToast(mensagem, tipo = 'info'){
   setTimeout(() => toast.remove(), 3800);
 }
 
-/* ---------- Renderização da área de conta no header ---------- */
-
 function iniciais(nome){
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0].toUpperCase()).join('');
 }
 
-function renderAuthArea(){
+function renderAuthArea(sessao = getSessaoAtiva()){
   const container = document.getElementById('authArea');
   if(!container) return;
-  const sessao = getSessaoAtiva();
+  container.replaceChildren();
 
   if(!sessao){
-    container.innerHTML = `<a href="login.html" class="btn btn-primary btn-sm">Entrar</a>`;
+    const login = document.createElement('a');
+    login.href = 'login.html';
+    login.className = 'btn btn-primary btn-sm';
+    login.textContent = 'Entrar';
+    container.appendChild(login);
     return;
   }
 
-  container.innerHTML = `
-    <div class="user-chip">
-      <span class="user-avatar">${iniciais(sessao.nome)}</span>
-      <span class="user-name">Olá, ${sessao.nome.split(' ')[0]}</span>
-      <a href="perfil.html">Meu perfil</a>
-      <button id="logoutBtn" type="button">Sair</button>
-    </div>
-  `;
-
-  document.getElementById('logoutBtn').addEventListener('click', () => {
-    encerrarSessao();
-    mostrarToast('Sessão encerrada. Até logo!', 'info');
-    setTimeout(() => window.location.href = 'index.html', 600);
+  const chip = document.createElement('div');
+  chip.className = 'user-chip';
+  const avatar = document.createElement('span');
+  avatar.className = 'user-avatar';
+  avatar.textContent = iniciais(sessao.nome);
+  const greeting = document.createElement('span');
+  greeting.className = 'user-name';
+  greeting.textContent = `Olá, ${sessao.nome.split(' ')[0]}`;
+  const profile = document.createElement('a');
+  profile.href = 'perfil.html';
+  profile.textContent = 'Meu perfil';
+  const logout = document.createElement('button');
+  logout.type = 'button';
+  logout.textContent = 'Sair';
+  logout.addEventListener('click', async () => {
+    logout.disabled = true;
+    try{
+      await encerrarSessao();
+      mostrarToast('Sessão encerrada. Até logo!', 'info');
+      window.location.href = 'index.html';
+    }catch(error){
+      logout.disabled = false;
+      mostrarToast(error.message, 'erro');
+    }
   });
+
+  chip.append(avatar, greeting, profile, logout);
+  container.appendChild(chip);
 }
 
-document.addEventListener('DOMContentLoaded', renderAuthArea);
+document.addEventListener('DOMContentLoaded', () => {
+  renderAuthArea();
+  validarSessaoServidor().catch((error) => {
+    console.error('Não foi possível validar a sessão:', error);
+  });
+});

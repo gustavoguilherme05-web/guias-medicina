@@ -16,8 +16,8 @@ const CASOS_CLINICOS = [
         ]
       },
       {
-        titulo: 'Objetivo da prescrição',
-        texto: 'Propor tratamento de primeira linha para provável faringoamigdalite estreptocócica (ex.: amoxicilina), além de analgesia e antitérmico.'
+        titulo: 'Recado',
+        texto: 'A receita deve incluir via de administração, droga, dose e recado para o paciente.'
       }
     ]
   },
@@ -38,8 +38,8 @@ const CASOS_CLINICOS = [
         ]
       },
       {
-        titulo: 'Objetivo da prescrição',
-        texto: 'Iniciar monoterapia anti-hipertensiva em dose inicial apropriada (ex.: enalapril, losartana ou hidroclorotiazida) e orientar medidas não farmacológicas.'
+        titulo: 'Recado',
+        texto: 'A receita deve incluir via de administração, droga, dose e recado para o paciente.'
       }
     ]
   },
@@ -60,8 +60,8 @@ const CASOS_CLINICOS = [
         ]
       },
       {
-        titulo: 'Objetivo da prescrição',
-        texto: 'Prescrever broncodilatador inalatório de resgate (ex.: salbutamol), orientar a retomada do tratamento de manutenção e indicar sinais de alarme.'
+        titulo: 'Recado',
+        texto: 'A receita deve incluir via de administração, droga, dose e recado para o paciente.'
       }
     ]
   },
@@ -82,8 +82,8 @@ const CASOS_CLINICOS = [
         ]
       },
       {
-        titulo: 'Objetivo da prescrição',
-        texto: 'Prescrever sais de reidratação oral, considerar sintomáticos com segurança e orientar dieta, hidratação e sinais de alarme. Evitar antibiótico empírico.'
+        titulo: 'Recado',
+        texto: 'A receita deve incluir via de administração, droga, dose e recado para o paciente.'
       }
     ]
   },
@@ -104,8 +104,8 @@ const CASOS_CLINICOS = [
         ]
       },
       {
-        titulo: 'Objetivo da prescrição',
-        texto: 'Prescrever opção antimicrobiana indicada para cistite aguda não complicada (ex.: nitrofurantoína, fosfomicina ou sulfametoxazol-trimetoprima) e analgesia urinária, se necessária.'
+        titulo: 'Recado',
+        texto: 'A receita deve incluir via de administração, droga, dose e recado para o paciente.'
       }
     ]
   },

@@ -267,6 +267,7 @@ async function exibirArtigo(){
     });
 
     marcarComoVisto(artigo.id);
+    await inicializarForum(artigo.id);
   }catch(err){
     container.innerHTML = '<p>Não foi possível carregar este guia agora.</p>';
     console.error(err);
