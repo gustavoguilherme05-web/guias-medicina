@@ -131,6 +131,7 @@
           </div>
           <div class="osce-message-list" id="messageList" role="log" aria-live="polite" aria-relevant="additions"></div>
           <div class="osce-chat-footer">
+            <p class="osce-ai-status" id="aiStatus" role="status" hidden></p>
             <form class="osce-composer" id="chatForm">
               <label class="osce-sr-only" for="chatInput">Digite sua pergunta ou conduta</label>
               <textarea id="chatInput" rows="1" maxlength="500" placeholder="Digite sua pergunta ou conduta..." autocomplete="off"></textarea>
@@ -180,6 +181,7 @@
             <span class="osce-eyebrow">DEVOLUTIVA</span>
             <h2>Feedback do preceptor</h2>
             <p id="feedbackText"></p>
+            <button type="button" class="osce-button osce-button-outline" id="retryDebriefButton" hidden>Tentar gerar a avaliação novamente</button>
             <div class="osce-feedback-callout"><span aria-hidden="true">↗</span><span>Continue praticando o raciocínio clínico e a comunicação centrada no paciente.</span></div>
           </section>
         </div>
@@ -190,7 +192,7 @@
           </button>
           <button type="button" class="osce-button osce-button-primary" id="backToMenuButton">Voltar ao menu de estações <span aria-hidden="true">→</span></button>
         </div>
-        <p class="osce-report-disclaimer">Feedback gerado por critérios fixos desta simulação fictícia. Não representa avaliação clínica real.</p>
+        <p class="osce-report-disclaimer">Feedback gerado por IA com os critérios educacionais desta simulação fictícia. Não representa avaliação clínica real.</p>
       </div>
     </section>
   </main>

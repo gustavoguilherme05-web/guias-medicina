@@ -10,23 +10,16 @@
   const chatInput = document.getElementById('chatInput');
   const chatForm = document.getElementById('chatForm');
   const sendButton = document.getElementById('sendButton');
+  const aiStatus = document.getElementById('aiStatus');
+  const retryDebriefButton = document.getElementById('retryDebriefButton');
   const timerDisplay = document.getElementById('timerDisplay');
   const timerContainer = document.getElementById('timerContainer');
   const transcript = [];
   let secondsRemaining = SESSION_SECONDS;
   let timerInterval = null;
-  let responseIndex = 0;
   let sessionEnded = false;
+  let waitingForPatient = false;
   const findings = { vitals: false, ecg: false, chestXray: false };
-
-  const patientResponses = [
-    'Estou com muita falta de ar, doutor.',
-    'Começou ontem à noite. Hoje está pior.',
-    'Piora quando me deito e melhora um pouco quando fico sentado.',
-    'Tenho pressão alta, mas não lembro o nome do remédio que tomo.',
-    'Não tive febre nem tosse. Estou bem preocupado com essa falta de ar.',
-    'Não sei dizer, doutor. Isso nunca aconteceu desse jeito antes.'
-  ];
 
   const vitalSigns = [
     { label: 'Pressão arterial', value: '150/90', unit: 'mmHg' },
@@ -128,7 +121,6 @@
       card.append(label, value, unit);
       results.appendChild(card);
     });
-    addMessage('patient', 'A equipe verificou: pressão 150 por 90, pulso 108, respiração 26 por minuto, saturação 91% e temperatura 36,8 graus.');
   }
 
   function showExam(examKey) {
@@ -161,24 +153,13 @@
     const vitalsAlreadyAvailable = findings.vitals;
 
     if (requestsVitals && !findings.vitals) showVitals();
-    const requestedExams = [];
     if (requestsEcg && !findings.ecg) {
       showExam('ecg');
-      requestedExams.push('eletrocardiograma');
     }
     if (requestsXray && !findings.chestXray) {
       showExam('chestXray');
-      requestedExams.push('radiografia de tórax');
     }
-    if (requestedExams.length) {
-      addMessage('patient', `O ${requestedExams.join(' e ')} foi realizado${requestedExams.length > 1 ? 's' : ''}. Você pode consultar o resultado no painel de exames.`);
-    } else if (requestsVitals && vitalsAlreadyAvailable) {
-      addMessage('patient', 'Os sinais vitais já estão disponíveis no painel clínico.');
-    } else if (!requestsVitals) {
-      const response = patientResponses[responseIndex % patientResponses.length];
-      responseIndex += 1;
-      addMessage('patient', response);
-    }
+    if (requestsVitals && vitalsAlreadyAvailable) selectSupportTab('vitals');
   }
 
   function selectSupportTab(tab) {
@@ -200,21 +181,91 @@
     });
   }
 
-  function renderChecklist() {
-    const submittedText = normalizedText(transcript.filter((message) => message.role === 'doctor').map((message) => message.text).join(' '));
-    const criteria = [
-      { label: 'Investigou sintomas e início do quadro', met: /quando|comec|inicio|piora|melhora|sintoma/.test(submittedText) },
-      { label: 'Perguntou sobre alergias', met: /alerg/.test(submittedText) },
-      { label: 'Solicitou ECG', met: findings.ecg },
-      { label: 'Propôs furosemida', met: /furosemida|furosemide/.test(submittedText) }
-    ];
-    const passed = criteria.filter((criterion) => criterion.met).length;
-    document.getElementById('scoreValue').textContent = String(passed * 2.5).replace('.', ',');
-    document.getElementById('checklistTotal').textContent = `${passed} de ${criteria.length}`;
+  const checklistCriteria = [
+    { id: 'symptoms', label: 'Investigou sintomas e início do quadro' },
+    { id: 'allergies', label: 'Perguntou sobre alergias' },
+    { id: 'ecg', label: 'Solicitou ECG' },
+    { id: 'furosemide', label: 'Propôs furosemida' }
+  ];
+
+  function conversationMessages() {
+    return transcript.map((message) => ({
+      role: message.role === 'doctor' ? 'user' : 'assistant',
+      content: message.text
+    }));
+  }
+
+  async function requestAi(mode, messages) {
+    const response = await fetch('/api/osce-ai', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mode, messages })
+    });
+    let data;
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error('O serviço de IA retornou uma resposta inválida.');
+    }
+    if (!response.ok) throw new Error(data.error || 'Não foi possível obter uma resposta da IA.');
+    if (typeof data.content !== 'string' || !data.content.trim()) {
+      throw new Error('A IA retornou uma resposta vazia.');
+    }
+    return data.content.trim();
+  }
+
+  function parseDebrief(content) {
+    const firstBrace = content.indexOf('{');
+    const lastBrace = content.lastIndexOf('}');
+    if (firstBrace === -1 || lastBrace <= firstBrace) {
+      throw new Error('A resposta do preceptor não contém um JSON válido.');
+    }
+
+    let result;
+    try {
+      result = JSON.parse(content.slice(firstBrace, lastBrace + 1));
+    } catch {
+      throw new Error('Não foi possível interpretar o JSON do preceptor.');
+    }
+
+    const score = result?.finalScore;
+    if (typeof score !== 'number' || !Number.isFinite(score) || score < 0 || score > 10) {
+      throw new Error('A resposta do preceptor contém uma nota inválida.');
+    }
+    if (!Array.isArray(result.checklist) || result.checklist.length !== checklistCriteria.length) {
+      throw new Error('A resposta do preceptor contém um checklist inválido.');
+    }
+    const completedById = new Map();
+    result.checklist.forEach((item) => {
+      if (!checklistCriteria.some((criterion) => criterion.id === item?.id) ||
+          typeof item.completed !== 'boolean' ||
+          completedById.has(item.id)) {
+        throw new Error('A resposta do preceptor contém itens de checklist inválidos.');
+      }
+      completedById.set(item.id, item.completed);
+    });
+    if (completedById.size !== checklistCriteria.length || typeof result.comment !== 'string' || !result.comment.trim()) {
+      throw new Error('A resposta do preceptor está incompleta.');
+    }
+
+    return {
+      score,
+      checklist: checklistCriteria.map((criterion) => ({
+        ...criterion,
+        met: completedById.get(criterion.id)
+      })),
+      comment: result.comment.trim()
+    };
+  }
+
+  function renderChecklist(result) {
+    const passed = result.checklist.filter((criterion) => criterion.met).length;
+    document.getElementById('scoreValue').textContent = String(result.score).replace('.', ',');
+    document.getElementById('checklistTotal').textContent = `${passed} de ${result.checklist.length}`;
     const list = document.getElementById('checklist');
     list.replaceChildren();
 
-    criteria.forEach((criterion) => {
+    result.checklist.forEach((criterion) => {
       const item = document.createElement('li');
       const label = document.createElement('span');
       label.textContent = criterion.label;
@@ -225,17 +276,24 @@
       list.appendChild(item);
     });
 
-    const strengths = [];
-    if (criteria[0].met) strengths.push('explorou aspectos da história clínica');
-    if (findings.vitals) strengths.push('solicitou sinais vitais');
-    if (findings.ecg) strengths.push('solicitou um ECG');
-    const missingItems = [];
-    if (!criteria[1].met) missingItems.push('perguntar sobre alergias');
-    if (!criteria[3].met) missingItems.push('explicitar sua proposta de conduta');
-    const feedback = strengths.length
-      ? `Você ${strengths.join(' e ')}.${missingItems.length ? ` Para completar a avaliação, lembre-se de ${missingItems.join(' e ')}.` : ' Você contemplou todos os critérios deste checklist.'}`
-      : `Você concluiu a estação e iniciou a prática de atendimento. Na próxima tentativa, explore o início e a evolução dos sintomas, solicite sinais vitais e exames pertinentes${missingItems.length ? ` e lembre-se de ${missingItems.join(' e ')}` : ''}.`;
-    document.getElementById('feedbackText').textContent = feedback;
+    document.getElementById('feedbackText').textContent = result.comment;
+  }
+
+  async function evaluateDebrief() {
+    retryDebriefButton.hidden = true;
+    document.getElementById('scoreValue').textContent = '…';
+    document.getElementById('checklistTotal').textContent = 'Avaliando';
+    document.getElementById('checklist').replaceChildren();
+    document.getElementById('feedbackText').textContent = 'O preceptor está avaliando a conversa…';
+    try {
+      const content = await requestAi('debrief', conversationMessages());
+      renderChecklist(parseDebrief(content));
+    } catch (error) {
+      document.getElementById('scoreValue').textContent = '—';
+      document.getElementById('checklistTotal').textContent = 'Indisponível';
+      document.getElementById('feedbackText').textContent = `Não foi possível gerar a avaliação: ${error.message}`;
+      retryDebriefButton.hidden = false;
+    }
   }
 
   function finishSession() {
@@ -246,8 +304,8 @@
     chatInput.disabled = true;
     sendButton.disabled = true;
     document.getElementById('finishButton').disabled = true;
-    renderChecklist();
     showScreen('debrief');
+    evaluateDebrief();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -283,14 +341,16 @@
     });
   }
 
-  document.getElementById('startButton').addEventListener('click', () => {
+  document.getElementById('startButton').addEventListener('click', async () => {
     sessionEnded = false;
-    responseIndex = 0;
+    waitingForPatient = false;
     transcript.length = 0;
     messageList.replaceChildren();
     chatInput.value = '';
-    chatInput.disabled = false;
-    sendButton.disabled = false;
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    aiStatus.textContent = 'Conectando ao paciente…';
+    aiStatus.hidden = false;
     document.getElementById('finishButton').disabled = false;
     findings.vitals = false;
     findings.ecg = false;
@@ -304,20 +364,52 @@
     selectSupportTab('vitals');
     setMobilePanel('chat');
     showScreen('simulation');
-    addMessage('patient', 'Olá, doutor. Estou com falta de ar desde ontem à noite.');
     startTimer();
-    chatInput.focus();
+    try {
+      const greeting = await requestAi('patient', conversationMessages());
+      if (!sessionEnded) {
+        addMessage('patient', greeting);
+        aiStatus.hidden = true;
+      }
+    } catch (error) {
+      if (!sessionEnded) {
+        aiStatus.textContent = `Não foi possível iniciar a conversa: ${error.message}`;
+      }
+    } finally {
+      if (!sessionEnded) {
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        chatInput.focus();
+      }
+    }
   });
 
-  chatForm.addEventListener('submit', (event) => {
+  chatForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     const text = chatInput.value.trim();
-    if (!text || sessionEnded) return;
+    if (!text || sessionEnded || waitingForPatient) return;
     addMessage('doctor', text);
     chatInput.value = '';
     chatInput.style.height = 'auto';
     processRequest(text);
-    chatInput.focus();
+    waitingForPatient = true;
+    chatInput.disabled = true;
+    sendButton.disabled = true;
+    aiStatus.hidden = true;
+    try {
+      const reply = await requestAi('patient', conversationMessages());
+      if (!sessionEnded) addMessage('patient', reply);
+    } catch (error) {
+      aiStatus.textContent = `Não foi possível obter resposta do paciente: ${error.message}`;
+      aiStatus.hidden = false;
+    } finally {
+      waitingForPatient = false;
+      if (!sessionEnded) {
+        chatInput.disabled = false;
+        sendButton.disabled = false;
+        chatInput.focus();
+      }
+    }
   });
 
   chatInput.addEventListener('input', () => {
@@ -333,6 +425,7 @@
   });
 
   document.getElementById('finishButton').addEventListener('click', finishSession);
+  retryDebriefButton.addEventListener('click', evaluateDebrief);
   document.getElementById('vitalsTab').addEventListener('click', () => selectSupportTab('vitals'));
   document.getElementById('examsTab').addEventListener('click', () => selectSupportTab('exams'));
   document.querySelectorAll('.osce-mobile-tab').forEach((tab) => {

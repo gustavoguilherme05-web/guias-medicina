@@ -126,6 +126,7 @@
 .osce-message-time{display:block;margin-top:5px;color:#a0aba7;font:500 .52rem var(--osce-mono)}
 .is-doctor .osce-message-time{text-align:right}
 .osce-chat-footer{padding:12px 20px 14px;border-top:1px solid var(--osce-line);background:#fff}
+.osce-ai-status{margin:0 0 8px;color:#a34e43;font-size:.68rem;line-height:1.5}
 .osce-composer{min-height:48px;padding:5px 6px 5px 13px;display:flex;align-items:center;gap:9px;border:1px solid #dfe9e5;border-radius:9px;background:#fff;transition:border-color .18s ease,box-shadow .18s ease}
 .osce-composer:focus-within{border-color:#8bbcae;box-shadow:0 0 0 3px rgba(49,126,105,.08)}
 .osce-composer textarea{width:100%;max-height:100px;min-height:22px;resize:none;border:0;outline:none;background:transparent;color:var(--osce-ink);font:400 .72rem/1.5 var(--font-body)}
@@ -177,6 +178,7 @@
 .osce-feedback-icon{position:absolute;right:18px;top:15px;color:#85b4a1;font-size:1.1rem}
 .osce-feedback-card h2{margin:6px 0 12px;font-size:1.27rem}
 .osce-feedback-card>p{margin:0;color:#647873;font-size:.74rem;line-height:1.75}
+.osce-feedback-card>#retryDebriefButton{margin-top:12px}
 .osce-feedback-callout{margin-top:16px;padding:10px 11px;display:flex;align-items:flex-start;gap:8px;border-radius:7px;background:#eff6f3;color:#668279;font-size:.64rem;line-height:1.55}
 .osce-feedback-callout>span:first-child{color:var(--osce-green);font-size:.86rem}
 .osce-report-actions{margin-top:19px;display:flex;align-items:center;justify-content:space-between;gap:12px}
