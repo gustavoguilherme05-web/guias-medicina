@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "guias-medicina",
+  "compatibility_date": "2026-11-12",
+  "pages_build_output_dir": "./public",
+  "vars": {
+    "BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai/",
+    "MODEL": "gemini-3.8-flash"
+  }
+}

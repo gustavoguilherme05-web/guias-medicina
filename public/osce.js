@@ -215,15 +215,16 @@
   }
 
   function parseDebrief(content) {
-    const firstBrace = content.indexOf('{');
-    const lastBrace = content.lastIndexOf('}');
+    const cleanedContent = content.replace(/```(?:json)?/gi, '').trim();
+    const firstBrace = cleanedContent.indexOf('{');
+    const lastBrace = cleanedContent.lastIndexOf('}');
     if (firstBrace === -1 || lastBrace <= firstBrace) {
       throw new Error('A resposta do preceptor não contém um JSON válido.');
     }
 
     let result;
     try {
-      result = JSON.parse(content.slice(firstBrace, lastBrace + 1));
+      result = JSON.parse(cleanedContent.slice(firstBrace, lastBrace + 1));
     } catch {
       throw new Error('Não foi possível interpretar o JSON do preceptor.');
     }

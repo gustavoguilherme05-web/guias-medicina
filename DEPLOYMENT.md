@@ -26,14 +26,14 @@ As contas da versão anterior existem somente no `localStorage` de cada navegado
 
 O banco armazena nome, e-mail, hash de senha com salt, sessões com expiração e comentários públicos ligados ao identificador de cada diretriz. Os comentários são limitados a 2.000 caracteres. Oriente os participantes a não publicar informações identificáveis de pacientes.
 
-## Simulador OSCE com Ollama
+## Simulador OSCE com Google AI Studio
 
-O atendimento e o debriefing usam a função `functions/api/osce-ai.js`, que mantém a chave no servidor e chama a API compatível com OpenAI. Para desenvolvimento local, inicie o Ollama e baixe o modelo (`ollama pull llama3.1`); depois execute:
+O atendimento e o debriefing usam `functions/api/osce-ai.js`, que chama o endpoint compatível com OpenAI do Google AI Studio. A chave é lida por `context.env` no servidor e não é enviada ao navegador.
+
+Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha `API_KEY` com uma chave do Google AI Studio e execute:
 
 ```sh
-npx wrangler pages dev public --env-file ollama.env
+npx wrangler pages dev
 ```
 
-O arquivo local `ollama.env` deve definir `VITE_AI_BASE_URL=http://localhost:11434/v1`, `VITE_AI_API_KEY=ollama` e `VITE_AI_MODEL=llama3.1`. Para outros ambientes, configure as mesmas variáveis em **Pages → Settings → Variables and Secrets**. Não use uma chave real em arquivo versionado.
-
-Como a URL padrão aponta para `localhost`, a função precisa executar na mesma máquina do Ollama. Um deploy remoto do Pages não consegue acessar o Ollama do computador de quem abre a página; nesse caso, configure uma API acessível ao ambiente da função e mantenha a chave como variável secreta.
+O arquivo `.dev.vars` deve definir `BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/`, `API_KEY` e `MODEL=gemini-3.8-flash`. Em produção e no ambiente Preview, configure as mesmas variáveis em **Pages → Settings → Variables and Secrets** e marque `API_KEY` como segredo.

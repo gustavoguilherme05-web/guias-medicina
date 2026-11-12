@@ -73,11 +73,11 @@ export async function onRequestPost(context) {
     messages.push({ role: message.role, content: message.content.trim() });
   }
 
-  const baseUrl = context.env.VITE_AI_BASE_URL;
-  const apiKey = context.env.VITE_AI_API_KEY;
-  const model = context.env.VITE_AI_MODEL;
+  const baseUrl = context.env.BASE_URL;
+  const apiKey = context.env.API_KEY;
+  const model = context.env.MODEL;
   if (!baseUrl || !apiKey || !model) {
-    return jsonResponse({ error: "Configure VITE_AI_BASE_URL, VITE_AI_API_KEY e VITE_AI_MODEL no ambiente do Pages." }, 500);
+    return jsonResponse({ error: "Configure BASE_URL, API_KEY e MODEL no ambiente do Pages." }, 500);
   }
 
   let endpoint;
@@ -106,7 +106,7 @@ export async function onRequestPost(context) {
       })
     });
   } catch {
-    return jsonResponse({ error: "Não foi possível conectar à IA. Verifique se o Ollama está em execução e acessível." }, 502);
+    return jsonResponse({ error: "Não foi possível conectar à API de IA. Verifique a URL e a disponibilidade do provedor." }, 502);
   }
 
   let data;
