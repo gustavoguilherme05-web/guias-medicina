@@ -29,6 +29,7 @@
       <li><a href="index.html">Início</a></li>
       <li><a href="#feed">Guias</a></li>
       <li><a href="prescricao.html">Prescrição</a></li>
+      <li><a href="osce.html">Simulação OSCE</a></li>
       <li><a href="sobre.html">Sobre</a></li>
       <li><a href="contato.html">Contato</a></li>
     </ul>
@@ -43,15 +44,71 @@
 
 <section class="hero">
   <span class="hero-eyebrow">Conteúdo gratuito • feito por estudantes</span>
-  <h1>Resumos de diretrizes médicas em forma de guias práticos para uma rápida revisão!</h1>
-  <p>Resumos objetivos e roteiros práticos feito por estudantes de medicina — sem custos.</p>
-  <a href="#feed" class="btn btn-primary">Ver todos os guias</a>
+  <h1>Estude, pratique e aprimore sua formação médica.</h1>
+  <p>Explore diretrizes em formato de guias práticos, treine prescrições e simule atendimentos clínicos — tudo em um só lugar.</p>
+  <div class="home-hero-actions">
+    <a href="#ferramentas" class="btn btn-primary">Conhecer as ferramentas <span aria-hidden="true">↓</span></a>
+    <a href="#feed" class="home-hero-link">Explorar diretrizes <span aria-hidden="true">→</span></a>
+  </div>
+</section>
+
+<section class="home-discover" id="ferramentas" aria-labelledby="homeDiscoverTitle">
+  <div class="home-section-heading">
+    <div>
+      <span class="home-section-eyebrow">APRENDIZADO NA PRÁTICA</span>
+      <h2 id="homeDiscoverTitle">Mais do que guias de estudo</h2>
+    </div>
+    <p>Escolha como quer estudar hoje.</p>
+  </div>
+
+  <div class="home-tools-grid">
+    <article class="home-tool-card home-tool-prescription">
+      <div class="home-tool-topline">
+        <span class="home-tool-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M8 3h7l4 4v14H5V3h3Zm6 0v5h5M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="home-tool-label">TREINO GUIADO</span>
+      </div>
+      <h3>Treino de prescrição</h3>
+      <p>Pratique sua conduta em casos clínicos e organize a prescrição com medicamento, dose, via e frequência.</p>
+      <div class="home-prescription-preview" aria-label="Prévia de um caso clínico">
+        <span class="home-preview-dot"></span>
+        <span><strong>Caso clínico</strong><small>Escolha um caso e escreva sua proposta</small></span>
+        <span class="home-preview-arrow" aria-hidden="true">↗</span>
+      </div>
+      <a href="prescricao.html" class="home-tool-link">Acessar treino de prescrição <span aria-hidden="true">→</span></a>
+    </article>
+
+    <article class="home-tool-card home-tool-osce">
+      <div class="home-tool-topline">
+        <span class="home-tool-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm-1 6 1.5 1.5L16 15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <span class="home-tool-label">SIMULAÇÃO INTERATIVA</span>
+      </div>
+      <h3>Simulação OSCE</h3>
+      <p>Conduza uma consulta simulada, solicite informações clínicas e receba um checklist com feedback ao final.</p>
+      <div class="home-osce-preview" aria-label="Prévia da estação clínica">
+        <span class="home-osce-avatar" aria-hidden="true">JM</span>
+        <span class="home-osce-patient"><strong>João Martins</strong><small>Paciente simulado · Clínica médica</small></span>
+        <span class="home-osce-timer" aria-label="Duração da estação">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="13" r="8" stroke="currentColor" stroke-width="1.7"/><path d="M12 9v4l2.5 1.5M9 2h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          10:00
+        </span>
+      </div>
+      <a href="osce.html" class="home-tool-link">Conhecer a simulação OSCE <span aria-hidden="true">→</span></a>
+    </article>
+  </div>
 </section>
 
 <div class="main-grid" id="feed">
   <div>
     <div class="feed-header">
-      <h2>Todos os Guias</h2>
+      <div>
+        <span class="home-section-eyebrow">REVISÃO RÁPIDA</span>
+        <h2>Diretrizes e guias médicos</h2>
+      </div>
+      <span class="home-guide-note">Conteúdo gratuito para seus estudos</span>
     </div>
     <div class="tag-filters" id="tagFilters"></div>
     <svg class="ecg-divider" viewBox="0 0 300 22" preserveAspectRatio="none" aria-hidden="true">
@@ -66,10 +123,6 @@
       <h4>Sobre o PAD</h4>
       <p>Registre-se para acompanhar seu progresso e favoritar guias!</p>
       <a href="login.html?cadastro=1" class="btn btn-ghost" style="width:100%;text-align:center;">Criar conta</a>
-    </div>
-    <div class="aside-card">
-      <h4>Destaques da semana</h4>
-      <div id="destaquesList"></div>
     </div>
   </aside>
 </div>

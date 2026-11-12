@@ -7,7 +7,7 @@
 
 let TODOS_ARTIGOS = [];   // cache em memória depois do primeiro fetch
 let TAG_ATIVA = null;     // tag selecionada nos filtros, ou null = todas
-let ITENS_VISIVEIS = 4;   // paginação simples do "Ver todos os tópicos"
+let ITENS_VISIVEIS = 3;   // paginação simples do "Ver todos os tópicos"
 
 /* ---------- Utilidades de estado local ---------- */
 
@@ -52,7 +52,6 @@ async function carregarFeed(){
     const artigos = await carregarDados();
     montarFiltrosDeTag(artigos);
     renderizarFeed(artigos);
-    carregarDestaques(artigos);
   }catch(err){
     lista.innerHTML = '<li>Não foi possível carregar os guias agora. Tente novamente em instantes.</li>';
     console.error(err);
@@ -70,7 +69,7 @@ function montarFiltrosDeTag(artigos){
   chipTodas.textContent = 'Todas';
   chipTodas.addEventListener('click', () => {
     TAG_ATIVA = null;
-    ITENS_VISIVEIS = 4;
+    ITENS_VISIVEIS = 3;
     atualizarChipsAtivos(container, chipTodas);
     renderizarFeed(TODOS_ARTIGOS);
   });
@@ -82,7 +81,7 @@ function montarFiltrosDeTag(artigos){
     chip.textContent = tag;
     chip.addEventListener('click', () => {
       TAG_ATIVA = tag;
-      ITENS_VISIVEIS = 4;
+      ITENS_VISIVEIS = 3;
       atualizarChipsAtivos(container, chip);
       renderizarFeed(TODOS_ARTIGOS);
     });
@@ -183,18 +182,6 @@ function configurarFavoritos(){
   });
 }
 
-function carregarDestaques(artigos){
-  const container = document.getElementById('destaquesList');
-  if(!container) return;
-  const destaques = artigos.filter(a => a.destaque).slice(0, 3);
-  container.innerHTML = destaques.map((a, i) => `
-    <a href="artigo.html?id=${a.id}" class="destaque-item">
-      <span class="destaque-num">0${i + 1}</span>
-      <span>${a.titulo}</span>
-    </a>
-  `).join('');
-}
-
 /* ---------- Busca em tempo real ---------- */
 
 function buscarArtigos(){
@@ -209,7 +196,7 @@ function buscarArtigos(){
   });
 
   input.addEventListener('input', () => {
-    ITENS_VISIVEIS = 4;
+    ITENS_VISIVEIS = 3;
     const feed = document.getElementById('feed');
     if(input.value.trim().length > 0 && feed){
       feed.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -318,7 +305,7 @@ function configurarLoadMore(){
   const btn = document.getElementById('loadMoreBtn');
   if(!btn) return;
   btn.addEventListener('click', () => {
-    ITENS_VISIVEIS += 4;
+    ITENS_VISIVEIS += 3;
     renderizarFeed(TODOS_ARTIGOS);
   });
 }

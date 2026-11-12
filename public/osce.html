@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Pratique uma estação clínica OSCE com paciente simulado e feedback educacional.">
+  <meta name="theme-color" content="#f4f7f6">
+  <title>Simulação OSCE — PAD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilo.css">
+  <link rel="stylesheet" href="osce.css">
+</head>
+<body class="osce-page">
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="logo" aria-label="PAD — página inicial">PAD</a>
+      <nav class="osce-top-nav" aria-label="Navegação principal">
+        <a href="index.html">Início</a>
+        <a href="index.html#feed">Guias</a>
+        <a href="prescricao.html">Prescrição</a>
+      </nav>
+      <span class="osce-top-label"><span class="osce-live-dot"></span> Simulação educacional</span>
+    </div>
+  </header>
+
+  <main class="osce-app" id="osceApp">
+    <section class="osce-screen osce-briefing" id="briefingScreen" aria-labelledby="briefingTitle">
+      <div class="osce-briefing-card">
+        <a class="osce-back-link" href="index.html"><span aria-hidden="true">←</span> Voltar ao PAD</a>
+        <div class="osce-briefing-art" aria-hidden="true">
+          <div class="osce-art-cross">+</div>
+          <div class="osce-art-pulse">
+            <svg viewBox="0 0 240 72" fill="none"><path d="M4 37h56l16-25 23 51 24-43 15 17h98" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="osce-art-clock">10:00</span>
+        </div>
+        <span class="osce-eyebrow">ESTAÇÃO 01 <span>•</span> CLÍNICA MÉDICA</span>
+        <h1 id="briefingTitle">Uma boa escuta<br>começa agora.</h1>
+        <p class="osce-briefing-intro">Você está no plantão. Conheça o caso, organize seu raciocínio e conduza a conversa com o paciente.</p>
+        <div class="osce-case-preview">
+          <div class="osce-case-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <strong>O caso</strong>
+            <p>Paciente masculino, 65 anos, procura atendimento por falta de ar. Você tem 10 minutos para realizar anamnese, exame físico e propor uma conduta.</p>
+          </div>
+        </div>
+        <div class="osce-briefing-meta">
+          <span><span aria-hidden="true">◷</span> 10 minutos</span>
+          <span><span aria-hidden="true">▤</span> Anamnese e conduta</span>
+          <span><span aria-hidden="true">✳</span> Feedback ao final</span>
+        </div>
+        <button class="osce-button osce-button-primary osce-start-button" id="startButton" type="button">
+          Iniciar atendimento <span aria-hidden="true">→</span>
+        </button>
+        <p class="osce-disclaimer">Caso fictício para fins de estudo. Não substitui avaliação ou orientação clínica.</p>
+      </div>
+    </section>
+
+    <section class="osce-screen osce-simulation" id="simulationScreen" aria-label="Simulação clínica" hidden>
+      <header class="osce-session-header">
+        <div class="osce-patient-heading">
+          <div class="osce-avatar osce-avatar-patient" aria-hidden="true">JM</div>
+          <div>
+            <span class="osce-eyebrow osce-session-eyebrow">PACIENTE SIMULADO</span>
+            <h1>João Martins <span>· 65 anos</span></h1>
+          </div>
+        </div>
+        <div class="osce-header-actions">
+          <button type="button" class="osce-button osce-button-subtle osce-scenario-button" id="scenarioButton">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 18h.01M12 14a4 4 0 1 0-4-4m4 4v-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            Ver cenário inicial
+          </button>
+          <div class="osce-timer" id="timerContainer" role="timer" aria-label="Tempo restante">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="1.7"/><path d="M12 9v4l2.5 1.5M9 2h6M12 2v3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span id="timerDisplay">10:00</span>
+            <span class="osce-timer-label">restantes</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="osce-mobile-tabs" role="tablist" aria-label="Área da simulação">
+        <button type="button" class="osce-mobile-tab is-active" data-mobile-panel="chat" role="tab" aria-selected="true">Atendimento</button>
+        <button type="button" class="osce-mobile-tab" data-mobile-panel="support" role="tab" aria-selected="false">Painel clínico</button>
+      </div>
+
+      <div class="osce-workspace">
+        <aside class="osce-support-panel" id="supportPanel" aria-label="Painel clínico">
+          <div class="osce-panel-heading">
+            <div>
+              <span class="osce-eyebrow">SEU APOIO</span>
+              <h2>Painel clínico</h2>
+            </div>
+            <span class="osce-lock-label"><span aria-hidden="true">◉</span> Sob demanda</span>
+          </div>
+          <div class="osce-support-tabs" role="tablist" aria-label="Informações clínicas">
+            <button type="button" class="osce-support-tab is-active" id="vitalsTab" role="tab" aria-selected="true" aria-controls="vitalsPanel">Sinais vitais</button>
+            <button type="button" class="osce-support-tab" id="examsTab" role="tab" aria-selected="false" aria-controls="examsPanel">Exames <span class="osce-count" id="examCount" hidden>0</span></button>
+          </div>
+          <div class="osce-support-content" id="vitalsPanel" role="tabpanel" aria-labelledby="vitalsTab">
+            <div class="osce-empty-state" id="vitalsEmpty">
+              <span class="osce-empty-icon" aria-hidden="true">⌁</span>
+              <strong>Nenhum dado solicitado</strong>
+              <p>Peça os sinais vitais ao paciente para que as informações apareçam aqui.</p>
+              <span class="osce-prompt-chip">“Pode verificar os sinais vitais?”</span>
+            </div>
+            <div class="osce-vitals-grid" id="vitalsResults" hidden></div>
+          </div>
+          <div class="osce-support-content" id="examsPanel" role="tabpanel" aria-labelledby="examsTab" hidden>
+            <div class="osce-empty-state" id="examsEmpty">
+              <span class="osce-empty-icon" aria-hidden="true">⌕</span>
+              <strong>Aguardando solicitação</strong>
+              <p>Peça um exame durante o atendimento para consultar o resultado.</p>
+              <span class="osce-prompt-chip">“Solicito um ECG”</span>
+            </div>
+            <div class="osce-exam-list" id="examResults"></div>
+          </div>
+          <div class="osce-panel-note"><span aria-hidden="true">✳</span> Os dados são fictícios e aparecem conforme suas solicitações.</div>
+        </aside>
+
+        <section class="osce-chat-panel" aria-label="Conversa com o paciente">
+          <div class="osce-chat-topline">
+            <div>
+              <span class="osce-eyebrow">CONSULTA EM ANDAMENTO</span>
+              <h2>Atendimento</h2>
+            </div>
+            <span class="osce-chat-status"><span class="osce-live-dot"></span> Paciente disponível</span>
+          </div>
+          <div class="osce-message-list" id="messageList" role="log" aria-live="polite" aria-relevant="additions"></div>
+          <div class="osce-chat-footer">
+            <form class="osce-composer" id="chatForm">
+              <label class="osce-sr-only" for="chatInput">Digite sua pergunta ou conduta</label>
+              <textarea id="chatInput" rows="1" maxlength="500" placeholder="Digite sua pergunta ou conduta..." autocomplete="off"></textarea>
+              <button type="submit" class="osce-send-button" id="sendButton" aria-label="Enviar mensagem">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </form>
+            <div class="osce-composer-hint"><span>↵</span> Enviar mensagem <span class="osce-hint-dot">·</span> Suas mensagens ficam salvas nesta sessão</div>
+            <div class="osce-chat-actions">
+              <span class="osce-educational-note"><span aria-hidden="true">ⓘ</span> Simulação para fins educacionais</span>
+              <button type="button" class="osce-finish-button" id="finishButton">Finalizar atendimento <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section class="osce-screen osce-debrief" id="debriefScreen" aria-labelledby="debriefTitle" hidden>
+      <div class="osce-report">
+        <div class="osce-report-top">
+          <a class="osce-back-link" href="index.html"><span aria-hidden="true">←</span> PAD <span class="osce-breadcrumb-slash">/</span> Simulação OSCE <span class="osce-breadcrumb-slash">/</span> Relatório</a>
+          <span class="osce-report-tag"><span aria-hidden="true">✓</span> ESTAÇÃO CONCLUÍDA</span>
+        </div>
+        <div class="osce-report-heading">
+          <div>
+            <span class="osce-eyebrow">RELATÓRIO DO PRECEPTOR</span>
+            <h1 id="debriefTitle">Seu atendimento,<br>em perspectiva.</h1>
+            <p>Estação 01 · Clínica Médica <span>·</span> João Martins, 65 anos</p>
+          </div>
+          <div class="osce-score-card">
+            <span class="osce-score-label">NOTA FINAL</span>
+            <div><strong id="scoreValue">0</strong><span>/10</span></div>
+            <span class="osce-score-caption">Desempenho da estação</span>
+          </div>
+        </div>
+        <div class="osce-report-grid">
+          <section class="osce-report-card osce-checklist-card">
+            <div class="osce-report-card-heading">
+              <div><span class="osce-eyebrow">PONTOS DE AVALIAÇÃO</span><h2>Checklist da estação</h2></div>
+              <span class="osce-checklist-total" id="checklistTotal">0 de 4</span>
+            </div>
+            <ul class="osce-checklist" id="checklist"></ul>
+            <p class="osce-checklist-footnote">Critérios demonstrados na conversa simulada.</p>
+          </section>
+          <section class="osce-report-card osce-feedback-card">
+            <div class="osce-feedback-icon" aria-hidden="true">✳</div>
+            <span class="osce-eyebrow">DEVOLUTIVA</span>
+            <h2>Feedback do preceptor</h2>
+            <p id="feedbackText"></p>
+            <div class="osce-feedback-callout"><span aria-hidden="true">↗</span><span>Continue praticando o raciocínio clínico e a comunicação centrada no paciente.</span></div>
+          </section>
+        </div>
+        <div class="osce-report-actions">
+          <button type="button" class="osce-button osce-button-outline" id="transcriptButton">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            Ver transcrição do chat
+          </button>
+          <button type="button" class="osce-button osce-button-primary" id="backToMenuButton">Voltar ao menu de estações <span aria-hidden="true">→</span></button>
+        </div>
+        <p class="osce-report-disclaimer">Feedback gerado por critérios fixos desta simulação fictícia. Não representa avaliação clínica real.</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="osce-modal-backdrop" id="scenarioModal" hidden>
+    <section class="osce-modal" role="dialog" aria-modal="true" aria-labelledby="scenarioModalTitle">
+      <button type="button" class="osce-modal-close" data-close-modal aria-label="Fechar">×</button>
+      <span class="osce-eyebrow">ESTAÇÃO 01 · CLÍNICA MÉDICA</span>
+      <h2 id="scenarioModalTitle">Cenário inicial</h2>
+      <p>Você é o plantonista da UPA. João Martins, paciente masculino de 65 anos, procura atendimento com queixa de falta de ar. Você tem 10 minutos para realizar anamnese, exame físico e propor uma conduta.</p>
+      <div class="osce-modal-meta"><span>◷ 10 minutos</span><span>▤ Anamnese e conduta</span></div>
+    </section>
+  </div>
+
+  <div class="osce-modal-backdrop" id="transcriptModal" hidden>
+    <section class="osce-modal osce-transcript-modal" role="dialog" aria-modal="true" aria-labelledby="transcriptModalTitle">
+      <button type="button" class="osce-modal-close" data-close-modal aria-label="Fechar">×</button>
+      <span class="osce-eyebrow">ESTAÇÃO 01 · CLÍNICA MÉDICA</span>
+      <h2 id="transcriptModalTitle">Transcrição do atendimento</h2>
+      <div class="osce-transcript-list" id="transcriptList"></div>
+      <button type="button" class="osce-button osce-button-outline osce-transcript-close" data-close-modal>Fechar transcrição</button>
+    </section>
+  </div>
+
+  <script src="osce.js"></script>
+</body>
+</html>
