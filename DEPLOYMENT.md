@@ -30,6 +30,20 @@ O banco armazena nome, e-mail, hash de senha com salt, sessões com expiração 
 
 O atendimento e o debriefing usam `functions/api/osce-ai.js`, que chama o endpoint compatível com OpenAI do Google AI Studio. A chave é lida por `context.env` no servidor e não é enviada ao navegador.
 
+Para publicar por upload direto e incluir a Cloudflare Pages Function, execute a partir da raiz do repositório:
+
+```sh
+npx wrangler pages deploy ./public --project-name=guias-medicina
+```
+
+No PowerShell do Windows, se a política de execução bloquear `npx.ps1`, use o executável `.cmd`:
+
+```powershell
+npx.cmd wrangler pages deploy ./public --project-name=guias-medicina
+```
+
+O upload manual somente da pasta `public` envia os arquivos estáticos, mas não atualiza `functions/api/osce-ai.js`. Se o projeto usa integração com Git, o deploy precisa incluir o repositório completo e manter `public` como diretório de saída.
+
 Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha `API_KEY` com uma chave do Google AI Studio e execute:
 
 ```sh

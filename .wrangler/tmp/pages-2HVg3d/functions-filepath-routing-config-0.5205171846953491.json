@@ -1,0 +1,69 @@
+{
+  "routes": [
+    {
+      "routePath": "/api/auth/login",
+      "mountPath": "/api/auth",
+      "method": "POST",
+      "module": [
+        "api/auth/login.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/auth/register",
+      "mountPath": "/api/auth",
+      "method": "POST",
+      "module": [
+        "api/auth/register.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/auth/session",
+      "mountPath": "/api/auth",
+      "method": "GET",
+      "module": [
+        "api/auth/session.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/auth/session",
+      "mountPath": "/api/auth",
+      "method": "POST",
+      "module": [
+        "api/auth/session.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/forum",
+      "mountPath": "/api",
+      "method": "GET",
+      "module": [
+        "api/forum.js:onRequestGet"
+      ]
+    },
+    {
+      "routePath": "/api/forum",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/forum.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/osce-ai",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/osce-ai.js:onRequestPost"
+      ]
+    },
+    {
+      "routePath": "/api/prescricao",
+      "mountPath": "/api",
+      "method": "POST",
+      "module": [
+        "api/prescricao.js:onRequestPost"
+      ]
+    }
+  ],
+  "baseURL": "/"
+}
