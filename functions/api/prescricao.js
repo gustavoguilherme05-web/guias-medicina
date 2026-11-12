@@ -70,9 +70,11 @@ export async function onRequestPost(context) {
     });
   }
 
-  const apiKey = context.env.GEMINI_API_KEY;
+  const baseUrl = context.env?.BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/";
+  const apiKey = context.env?.API_KEY;
+  const model = context.env?.MODEL || "gemini-3.8-flash";
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: "Chave GEMINI_API_KEY não configurada no Cloudflare." }), {
+    return new Response(JSON.stringify({ error: "API_KEY não está configurada como segredo no ambiente do Cloudflare Pages." }), {
       status: 500,
       headers: { "Content-Type": "application/json" }
     });
@@ -108,20 +110,33 @@ Analise a prescrição do aluno considerando o caso e as diretrizes acima. Não 
 [Apresente uma sugestão educacional de prescrição baseada nas diretrizes, incluindo medidas não farmacológicas e ressalvas relevantes.]
 `;
 
+  let endpoint;
+  try {
+    endpoint = new URL(`${baseUrl.replace(/\/+$/, "")}/chat/completions`);
+    if (!["http:", "https:"].includes(endpoint.protocol)) throw new Error("Protocolo inválido.");
+  } catch {
+    return new Response(JSON.stringify({ error: "A URL da API de IA não é válida." }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+
   let response;
   try {
-    response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: systemPrompt }] }]
-        })
-      }
-    );
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "system", content: systemPrompt }],
+        temperature: 0.1
+      })
+    });
   } catch {
-    return new Response(JSON.stringify({ error: "Não foi possível conectar ao serviço de análise." }), {
+    return new Response(JSON.stringify({ error: "Não foi possível conectar à API de IA." }), {
       status: 502,
       headers: { "Content-Type": "application/json" }
     });
@@ -138,13 +153,13 @@ Analise a prescrição do aluno considerando o caso e as diretrizes acima. Não 
   }
 
   if (!response.ok) {
-    return new Response(JSON.stringify({ error: "O serviço de análise não conseguiu processar a solicitação." }), {
+    return new Response(JSON.stringify({ error: `A API de IA retornou um erro (${response.status}).` }), {
       status: 502,
       headers: { "Content-Type": "application/json" }
     });
   }
 
-  const analiseTexto = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  const analiseTexto = data.choices?.[0]?.message?.content;
   if (typeof analiseTexto !== "string" || !analiseTexto.trim()) {
     return new Response(JSON.stringify({ error: "O serviço de análise não retornou um feedback válido." }), {
       status: 502,
