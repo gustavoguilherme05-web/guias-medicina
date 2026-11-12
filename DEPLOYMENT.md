@@ -36,4 +36,4 @@ Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha
 npx wrangler pages dev
 ```
 
-O arquivo `.dev.vars` deve definir `BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/`, `API_KEY` e `MODEL=gemini-3.8-flash`. Em produção e no ambiente Preview, configure as mesmas variáveis em **Pages → Settings → Variables and Secrets** e marque `API_KEY` como segredo.
+O arquivo `.dev.vars` deve definir `BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/`, `API_KEY` e `MODEL=gemini-3.8-flash`. O `wrangler.json` define a URL e o modelo para deploys que usam Wrangler; a Function também usa esses valores como padrão quando o Pages publicado pelo painel não injeta `vars` do arquivo. Em **Pages → Settings → Variables and Secrets**, configure `API_KEY` separadamente para Production e Preview e marque-a como segredo. Não coloque a chave em `wrangler.json` nem no código.

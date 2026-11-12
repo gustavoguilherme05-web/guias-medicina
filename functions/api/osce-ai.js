@@ -5,6 +5,9 @@ const OSCE_CHECKLIST = [
   { id: "furosemide", label: "Propôs furosemida" }
 ];
 
+const DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
+const DEFAULT_MODEL = "gemini-3.8-flash";
+
 const PATIENT_PROMPT = `Você é João Martins, paciente fictício de 65 anos atendido em uma UPA. Responda sempre em português brasileiro, em primeira pessoa, de maneira coloquial, breve e natural.
 
 Interprete estritamente o papel do paciente. Nunca revele ou sugira um diagnóstico, não aja como médico e não dê orientações clínicas. Responda somente ao que o médico perguntar, sem antecipar informações.
@@ -73,11 +76,13 @@ export async function onRequestPost(context) {
     messages.push({ role: message.role, content: message.content.trim() });
   }
 
-  const baseUrl = context.env.BASE_URL;
-  const apiKey = context.env.API_KEY;
-  const model = context.env.MODEL;
-  if (!baseUrl || !apiKey || !model) {
-    return jsonResponse({ error: "Configure BASE_URL, API_KEY e MODEL no ambiente do Pages." }, 500);
+  const baseUrl = context.env?.BASE_URL || DEFAULT_BASE_URL;
+  const apiKey = context.env?.API_KEY;
+  const model = context.env?.MODEL || DEFAULT_MODEL;
+  if (!apiKey) {
+    return jsonResponse({
+      error: "API_KEY não está configurada como segredo no ambiente do Cloudflare Pages (Production ou Preview)."
+    }, 500);
   }
 
   let endpoint;
