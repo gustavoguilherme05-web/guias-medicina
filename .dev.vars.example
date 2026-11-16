@@ -1,3 +1,7 @@
 BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/
 API_KEY=replace_with_google_ai_studio_api_key
 MODEL=gemini-3.8-flash
+STRIPE_SECRET_KEY=replace_with_stripe_test_secret_key
+STRIPE_PUBLISHABLE_KEY=replace_with_stripe_test_publishable_key
+STRIPE_PRICE_ID=replace_with_stripe_price_id
+STRIPE_WEBHOOK_SECRET=replace_with_stripe_webhook_secret

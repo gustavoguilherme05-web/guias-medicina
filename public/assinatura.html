@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Assinatura — PAD</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<header class="site-header">
+  <div class="header-inner">
+    <a href="index.html" class="logo">PAD</a>
+    <nav class="nav-links" aria-label="Navegação principal">
+      <a href="index.html">Início</a>
+      <a href="perfil.html">Meu perfil</a>
+    </nav>
+    <div class="auth-area" id="authArea"></div>
+  </div>
+</header>
+
+<main class="checkout-wrapper">
+  <section class="checkout-card" aria-labelledby="checkoutTitle">
+    <span class="home-section-eyebrow">ASSINATURA PAD</span>
+    <h1 id="checkoutTitle">Acesse sua assinatura</h1>
+    <p class="checkout-description">Entre na sua conta para consultar seu plano ou concluir a assinatura com segurança.</p>
+    <p id="subscriptionStatus" class="checkout-status" role="status" aria-live="polite">Consultando sua conta...</p>
+    <button id="startCheckout" class="btn btn-primary checkout-button" type="button" hidden>Continuar para pagamento</button>
+    <div id="checkout-form" class="checkout-form" hidden></div>
+    <p id="checkoutError" class="checkout-error" role="alert" hidden></p>
+    <a class="checkout-back" href="index.html">Voltar para o início</a>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <nav>
+    <a href="sobre.html">Sobre</a>
+    <a href="privacidade.html">Política de Privacidade</a>
+    <a href="contato.html">Contato</a>
+  </nav>
+  <span class="copyright">© 2026 PAD. Todos os direitos reservados.</span>
+</footer>
+
+<script src="https://js.stripe.com/dahlia/stripe.js"></script>
+<script src="auth.js"></script>
+<script src="script.js"></script>
+<script src="assinatura.js"></script>
+</body>
+</html>

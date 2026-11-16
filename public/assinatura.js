@@ -1,0 +1,129 @@
+const statusElement = document.getElementById('subscriptionStatus');
+const checkoutButton = document.getElementById('startCheckout');
+const checkoutContainer = document.getElementById('checkout-form');
+const errorElement = document.getElementById('checkoutError');
+const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
+
+function mostrarErro(mensagem){
+  errorElement.textContent = mensagem;
+  errorElement.hidden = false;
+}
+
+async function consultarAssinatura(){
+  const response = await fetch('/api/billing/status', { credentials: 'same-origin' });
+  const data = await response.json();
+  if(response.status === 401){
+    const destino = encodeURIComponent('assinatura.html' + window.location.search);
+    window.location.replace('login.html?redirect=' + destino);
+    return null;
+  }
+  if(!response.ok) throw new Error(data?.error || 'Não foi possível consultar sua assinatura.');
+  return data;
+}
+
+async function atualizarStatus(){
+  const data = await consultarAssinatura();
+  if(!data) return;
+
+  if(data.status === 'active' || data.status === 'trialing'){
+    statusElement.textContent = data.status === 'trialing'
+      ? 'Sua assinatura está em período de avaliação.'
+      : 'Sua assinatura está ativa.';
+    checkoutButton.hidden = true;
+    return true;
+  }
+
+  const statusLabels = {
+    past_due: 'O pagamento da assinatura precisa de atenção.',
+    incomplete: 'O pagamento ainda está pendente.',
+    unpaid: 'Sua assinatura está com pagamento pendente.',
+    paused: 'Sua assinatura está pausada.',
+    canceled: 'Sua assinatura está cancelada.',
+    incomplete_expired: 'A tentativa anterior de pagamento expirou.',
+    free: 'Você ainda não possui uma assinatura ativa.'
+  };
+  statusElement.textContent = checkoutReturned
+    ? 'Pagamento recebido. Aguardando a confirmação segura da Stripe...'
+    : (statusLabels[data.status] || 'Consulte o status da sua assinatura.');
+  checkoutButton.hidden = !data.canStartCheckout;
+  return false;
+}
+
+async function iniciarCheckout(){
+  checkoutButton.disabled = true;
+  checkoutButton.textContent = 'Preparando checkout...';
+  errorElement.hidden = true;
+
+  try{
+    const response = await fetch('/api/billing/checkout', {
+      method: 'POST',
+      credentials: 'same-origin'
+    });
+    const data = await response.json();
+    if(!response.ok) throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
+    if(typeof window.Stripe !== 'function') throw new Error('O formulário de pagamento não carregou. Atualize a página e tente novamente.');
+
+    const stripe = window.Stripe(data.publishable_key);
+    const checkout = stripe.initCheckoutFormSdk({
+      clientSecret: data.client_secret,
+      appearance: {
+        theme: 'stripe',
+        inputs: 'spaced',
+        labels: 'auto',
+        variables: {
+          borderRadius: '4px',
+          colorBackground: '#ffffff',
+          colorDanger: '#df1b41',
+          colorPrimary: '#0570de',
+          colorSuccess: '#00c853',
+          colorText: '#30313d',
+          fontFamily: 'default',
+          fontSizeBase: '16px',
+          spacingUnit: '4px'
+        }
+      }
+    });
+    const checkoutForm = checkout.createForm({ layout: 'expanded' });
+    checkoutButton.hidden = true;
+    checkoutContainer.hidden = false;
+    checkoutForm.mount('#checkout-form');
+
+    const actionsResult = await checkout.loadActions();
+    if(actionsResult.type !== 'success'){
+      throw new Error('Não foi possível carregar as ações de pagamento.');
+    }
+    checkoutForm.on('confirm', async (event) => {
+      try{
+        const result = await actionsResult.actions.confirm({ formConfirmEvent: event });
+        if(result?.type === 'error'){
+          mostrarErro(result.error?.message || 'Não foi possível confirmar o pagamento.');
+        }
+      }catch(error){
+        mostrarErro(error.message || 'Não foi possível confirmar o pagamento.');
+      }
+    });
+  }catch(error){
+    mostrarErro(error.message || 'Não foi possível iniciar o checkout agora.');
+    checkoutButton.disabled = false;
+    checkoutButton.hidden = false;
+    checkoutButton.textContent = 'Tentar novamente';
+  }
+}
+
+checkoutButton.addEventListener('click', iniciarCheckout);
+
+(async function iniciarPaginaAssinatura(){
+  try{
+    const ativa = await atualizarStatus();
+    if(checkoutReturned && !ativa){
+      for(let tentativa = 0; tentativa < 5; tentativa += 1){
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        if(await atualizarStatus()) break;
+      }
+    }
+  }catch(error){
+    statusElement.textContent = 'Não foi possível consultar sua assinatura.';
+    checkoutButton.hidden = true;
+    mostrarErro(error.message || 'Tente novamente mais tarde.');
+  }
+})();

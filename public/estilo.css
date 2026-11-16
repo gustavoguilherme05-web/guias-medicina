@@ -650,6 +650,32 @@ body.dark .prescricao-result.has-error p{ color:#F09A8B; }
 }
 .auth-switch button{ background:none; border:none; color: var(--vital-dark); font-weight:600; }
 
+/* ---------- Checkout de assinatura ---------- */
+
+.checkout-wrapper{
+  min-height: calc(100vh - 260px);
+  display:flex; justify-content:center; align-items:flex-start;
+  padding: 60px 20px;
+}
+.checkout-card{
+  width:100%; max-width: 620px;
+  background: var(--surface); border:1px solid var(--line);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 32px;
+}
+.checkout-card h1{
+  font-family: var(--font-display); font-size:1.8rem; margin:8px 0;
+}
+.checkout-description,.checkout-status{
+  color:var(--ink-soft); font-size:.92rem;
+}
+.checkout-button{ margin:16px 0; }
+.checkout-button[hidden],.checkout-form[hidden],.checkout-error[hidden]{ display:none; }
+.checkout-form{ margin-top:24px; }
+.checkout-error{ color:#B4402A; font-size:.88rem; }
+.checkout-back{ display:inline-block; margin-top:20px; color:var(--vital-dark); font-size:.88rem; }
+body.dark .checkout-error{ color:#F09A8B; }
+
 /* honeypot anti-spam: escondido de humanos, visível para bots */
 .hp-field{ position:absolute; left:-9999px; opacity:0; height:0; overflow:hidden; }
 
