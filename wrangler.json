@@ -3,6 +3,13 @@
   "name": "guias-medicina",
   "compatibility_date": "2026-11-12",
   "pages_build_output_dir": "./public",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "guias-medicina-db",
+      "database_id": "58af21e4-5da3-4b1d-8612-7ee0f1d32a00"
+    }
+  ],
   "vars": {
     "BASE_URL": "https://generativelanguage.googleapis.com/v1beta/openai/",
     "MODEL": "gemini-3.8-flash"
