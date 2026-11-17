@@ -8,6 +8,7 @@ export async function stripeRequest(env, path, options = {}) {
     method: options.method || "GET",
     headers: {
       Authorization: `Bearer ${secretKey}`,
+      "Stripe-Version": "2026-03-25.dahlia",
       ...(options.body ? { "Content-Type": "application/x-www-form-urlencoded" } : {})
     },
     body: options.body

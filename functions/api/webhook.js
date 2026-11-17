@@ -110,7 +110,10 @@ export async function onRequestPost({ request, env }) {
     if (event.type === "checkout.session.completed" ||
         event.type === "checkout.session.async_payment_succeeded") {
       if (object?.mode === "subscription") {
-        const emailValue = object.metadata?.user_email || object.client_reference_id;
+        const emailValue = object.metadata?.user_email ||
+          object.client_reference_id ||
+          object.customer_details?.email ||
+          object.customer_email;
         const email = typeof emailValue === "string" ? emailValue.trim().toLowerCase() : "";
         await syncSubscription(
           env,

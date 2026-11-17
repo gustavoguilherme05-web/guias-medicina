@@ -58,19 +58,14 @@ export async function onRequestPost({ request, env }) {
     form.set("line_items[0][price]", env.STRIPE_PRICE_ID);
     form.set("line_items[0][quantity]", "1");
     form.set("billing_address_collection", "auto");
+    form.set("phone_number_collection[enabled]", "false");
+    form.set("automatic_tax[enabled]", "false");
     form.set("name_collection[individual][enabled]", "true");
     form.set("name_collection[individual][optional]", "true");
     form.set("payment_method_collection", "always");
     form.set("submit_type", "auto");
     form.set("integration_identifier", "custom_embedded_web_0001");
     form.set("saved_payment_method_options[payment_method_save]", "enabled");
-    form.set("metadata[user_email]", user.email);
-    if (user.email.length <= 200) form.set("client_reference_id", user.email);
-    if (account?.stripe_customer_id) {
-      form.set("customer", account.stripe_customer_id);
-    } else {
-      form.set("customer_email", user.email);
-    }
 
     const session = await stripeRequest(env, "checkout/sessions", {
       method: "POST",
