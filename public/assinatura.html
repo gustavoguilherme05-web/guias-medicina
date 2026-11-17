@@ -24,10 +24,42 @@
 <main class="checkout-wrapper">
   <section class="checkout-card" aria-labelledby="checkoutTitle">
     <span class="home-section-eyebrow">ASSINATURA PAD</span>
-    <h1 id="checkoutTitle">Acesse sua assinatura</h1>
-    <p class="checkout-description">Entre na sua conta para consultar seu plano ou concluir a assinatura com segurança.</p>
+    <h1 id="checkoutTitle">Escolha seu plano</h1>
+    <p class="checkout-description">Selecione o plano ideal para seus estudos. A cobrança é recorrente e o pagamento é processado com segurança pela Stripe.</p>
     <p id="subscriptionStatus" class="checkout-status" role="status" aria-live="polite">Consultando sua conta...</p>
-    <button id="startCheckout" class="btn btn-primary checkout-button" type="button" hidden>Continuar para pagamento</button>
+    <div id="plan-list" class="plan-list" aria-label="Planos disponíveis" hidden>
+      <article class="plan-card">
+        <h2 class="plan-title">Treino de Prescrição</h2>
+        <p class="plan-price">R$ 19,90<span>/mês</span></p>
+        <ul class="plan-features">
+          <li>Corretor de prescrição ilimitado</li>
+          <li>Acesso às diretrizes médicas</li>
+          <li>Não inclui o simulador OSCE</li>
+        </ul>
+        <button class="btn btn-ghost plan-select" type="button" data-plan="prescricao_mensal">Selecionar plano</button>
+      </article>
+      <article class="plan-card plan-card-popular">
+        <span class="plan-badge">MAIS ESCOLHIDO</span>
+        <h2 class="plan-title">Pega Diretriz PRO</h2>
+        <p class="plan-price">R$ 29,90<span>/mês</span></p>
+        <ul class="plan-features">
+          <li>Corretor de prescrição ilimitado</li>
+          <li>Simulador OSCE com IA ilimitado</li>
+          <li>Acesso às diretrizes médicas</li>
+        </ul>
+        <button class="btn btn-primary plan-select" type="button" data-plan="pro_mensal">Selecionar plano</button>
+      </article>
+      <article class="plan-card">
+        <h2 class="plan-title">PRO Trimestral</h2>
+        <p class="plan-price">R$ 79,90<span>/3 meses</span></p>
+        <ul class="plan-features">
+          <li>Todos os recursos do plano PRO</li>
+          <li>Economia de R$ 9,80 no período</li>
+          <li>Cobrança a cada 3 meses</li>
+        </ul>
+        <button class="btn btn-ghost plan-select" type="button" data-plan="pro_trimestral">Selecionar plano</button>
+      </article>
+    </div>
     <div id="checkout-form" class="checkout-form" hidden></div>
     <p id="checkoutError" class="checkout-error" role="alert" hidden></p>
     <a class="checkout-back" href="index.html">Voltar para o início</a>

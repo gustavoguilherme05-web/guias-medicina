@@ -4,7 +4,7 @@ Este arquivo reúne os valores e tarefas necessários para testar e publicar o c
 
 ## Values to Replace
 
-O código do endpoint não contém IDs de preço fixos. `mode=subscription` e `line_items[0][price]` usando `STRIPE_PRICE_ID` são intencionais. Substitua os valores de exemplo no arquivo local de configuração e configure os valores correspondentes no Cloudflare Pages.
+O endpoint recebe apenas a chave do plano; os IDs de preço correspondentes permanecem no servidor. `mode=subscription` e `line_items[0][price]` são intencionais. Configure os preços recorrentes para cada plano no ambiente local e no Cloudflare Pages.
 
 **Arquivo com valores de exemplo:**
 - [.dev.vars.example](./.dev.vars.example)
@@ -13,7 +13,9 @@ O código do endpoint não contém IDs de preço fixos. `mode=subscription` e `l
 |-------|-----------------|------------------|
 | `STRIPE_SECRET_KEY` | `replace_with_stripe_test_secret_key` | Chave secreta do mesmo modo Stripe (`sk_test_...` ou `sk_live_...`); mantenha-a como secret no Cloudflare. |
 | `STRIPE_PUBLISHABLE_KEY` | `replace_with_stripe_test_publishable_key` | Chave publicável correspondente (`pk_test_...` ou `pk_live_...`). |
-| `STRIPE_PRICE_ID` | `replace_with_stripe_price_id` | ID de um preço recorrente (`price_...`) no mesmo modo Stripe. |
+| `STRIPE_PRICE_PRESCRICAO_MENSAL` | `price_1UcXEFD03My4X5KW3iO2v8TM` | Preço mensal de Treino de Prescrição, no mesmo modo Stripe das chaves. |
+| `STRIPE_PRICE_PRO_MENSAL` | `price_1UcXCKD03My4X5KWjhowgWEN` | Preço mensal de Pega Diretriz PRO, no mesmo modo Stripe das chaves. |
+| `STRIPE_PRICE_PRO_TRIMESTRAL` | `price_1UcXCvD03My4X5KWRNEHPYyz` | Preço de cobrança a cada três meses do plano PRO, no mesmo modo Stripe das chaves. |
 | `STRIPE_WEBHOOK_SECRET` | `replace_with_stripe_webhook_secret` | Signing secret do endpoint webhook (`whsec_...`); mantenha-o como secret. |
 
 ## Configured Parameters
@@ -27,7 +29,7 @@ Estes valores do Checkout Studio já estão configurados no endpoint:
 |-----------|-------|
 | `ui_mode` | `form` |
 | `mode` | `subscription` |
-| `line_items` | `STRIPE_PRICE_ID`, quantidade `1` |
+| `line_items` | Preço correspondente ao plano selecionado, quantidade `1` |
 | `billing_address_collection` | `auto` |
 | `phone_number_collection.enabled` | `false` |
 | `automatic_tax.enabled` | `false` |
@@ -43,8 +45,8 @@ Não é necessário instalar `stripe-node`: as Cloudflare Pages Functions chamam
 
 ## Setup e próximos passos
 
-1. No Stripe Dashboard, crie/valide um produto com preço recorrente e use o ID do preço em `STRIPE_PRICE_ID`.
-2. Em **Cloudflare Pages → Settings → Variables and Secrets**, configure as quatro variáveis acima para cada ambiente usado (Preview e/ou Production). Use chaves, preço e webhook do mesmo modo (Test ou Live), marque `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` como secrets e faça um novo deploy.
+1. No Stripe Dashboard, crie/valide os três preços recorrentes e confirme os IDs no arquivo [.dev.vars.example](./.dev.vars.example). Os dois primeiros devem ter intervalo mensal; o terceiro, intervalo de três meses.
+2. Em **Cloudflare Pages → Settings → Variables and Secrets**, configure as seis variáveis de chave, preço e webhook para cada ambiente usado (Preview e/ou Production). Use chaves, preços e webhook do mesmo modo (Test ou Live), marque `STRIPE_SECRET_KEY` e `STRIPE_WEBHOOK_SECRET` como secrets e faça um novo deploy.
 3. Configure o webhook em `/api/webhook` para os eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated` e `customer.subscription.deleted`.
 4. Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha os valores de teste e use a Stripe CLI para encaminhar eventos a `http://localhost:8788/api/webhook`.
 5. O banco remoto de produção já recebeu a migração 0003. Para um novo ambiente D1, aplique as migrações com `npx.cmd wrangler d1 migrations apply guias-medicina-db --remote`.
@@ -52,12 +54,12 @@ Não é necessário instalar `stripe-node`: as Cloudflare Pages Functions chamam
 ### Estrutura e fluxo
 
 - `public/assinatura.html` carrega Stripe.js Dahlia e contém o ponto de montagem do formulário.
-- `public/assinatura.js` solicita uma Checkout Session autenticada a `/api/billing/checkout`, monta `initCheckoutFormSdk` e confirma o pagamento.
-- `functions/api/billing/checkout.js` cria a sessão no servidor com o preço configurado no ambiente.
+- `public/assinatura.js` envia a chave do plano selecionado para `/api/billing/checkout`, monta `initCheckoutFormSdk` e confirma o pagamento.
+- `functions/api/billing/checkout.js` valida a chave do plano e seleciona o ID de preço configurado no servidor antes de criar a sessão.
 - `functions/api/webhook.js` valida a assinatura do webhook e sincroniza o status da assinatura com a conta cujo e-mail foi coletado no Checkout. O e-mail informado no Checkout precisa ser o mesmo usado na conta PAD.
 - `functions/_shared/stripe.js` chama a API Stripe com autenticação do lado do servidor e a versão Dahlia.
 
-O backend já registra o status de assinatura no D1. A política de acesso e as cotas das ferramentas para os planos Free/Premium ainda precisam ser definidas antes de liberar recursos pagos.
+O backend registra o status da assinatura no D1 e o checkout já permite selecionar os três preços. A aplicação ainda não aplica permissões por plano nas ferramentas; antes de considerar os benefícios como provisionados, implemente a validação de acesso correspondente no servidor.
 
 ### Testes
 

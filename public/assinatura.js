@@ -1,7 +1,9 @@
 const statusElement = document.getElementById('subscriptionStatus');
-const checkoutButton = document.getElementById('startCheckout');
+const planList = document.getElementById('plan-list');
 const checkoutContainer = document.getElementById('checkout-form');
 const errorElement = document.getElementById('checkoutError');
+const checkoutCard = planList.closest('.checkout-card');
+const planButtons = [...document.querySelectorAll('.plan-select')];
 const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
 
 function mostrarErro(mensagem){
@@ -29,7 +31,8 @@ async function atualizarStatus(){
     statusElement.textContent = data.status === 'trialing'
       ? 'Sua assinatura está em período de avaliação.'
       : 'Sua assinatura está ativa.';
-    checkoutButton.hidden = true;
+    planList.hidden = true;
+    checkoutCard.classList.remove('has-plans');
     return true;
   }
 
@@ -45,19 +48,27 @@ async function atualizarStatus(){
   statusElement.textContent = checkoutReturned
     ? 'Pagamento recebido. Aguardando a confirmação segura da Stripe...'
     : (statusLabels[data.status] || 'Consulte o status da sua assinatura.');
-  checkoutButton.hidden = !data.canStartCheckout;
+  planList.hidden = !data.canStartCheckout;
+  checkoutCard.classList.toggle('has-plans', data.canStartCheckout);
   return false;
 }
 
-async function iniciarCheckout(){
-  checkoutButton.disabled = true;
-  checkoutButton.textContent = 'Preparando checkout...';
+async function iniciarCheckout(plan){
+  const selectedButton = planButtons.find(button => button.dataset.plan === plan);
+  if(!selectedButton) return;
+
+  planButtons.forEach(button => {
+    button.disabled = true;
+  });
+  selectedButton.textContent = 'Preparando checkout...';
   errorElement.hidden = true;
 
   try{
     const response = await fetch('/api/billing/checkout', {
       method: 'POST',
-      credentials: 'same-origin'
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan })
     });
     const data = await response.json();
     if(!response.ok) throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
@@ -84,7 +95,7 @@ async function iniciarCheckout(){
       }
     });
     const checkoutForm = checkout.createForm({ layout: 'expanded' });
-    checkoutButton.hidden = true;
+    planList.hidden = true;
     checkoutContainer.hidden = false;
     checkoutForm.mount('#checkout-form');
 
@@ -104,13 +115,21 @@ async function iniciarCheckout(){
     });
   }catch(error){
     mostrarErro(error.message || 'Não foi possível iniciar o checkout agora.');
-    checkoutButton.disabled = false;
-    checkoutButton.hidden = false;
-    checkoutButton.textContent = 'Tentar novamente';
+    checkoutContainer.replaceChildren();
+    checkoutContainer.hidden = true;
+    planList.hidden = false;
+    checkoutCard.classList.add('has-plans');
+    planButtons.forEach(button => {
+      button.disabled = false;
+      button.textContent = 'Selecionar plano';
+    });
   }
 }
 
-checkoutButton.addEventListener('click', iniciarCheckout);
+planList.addEventListener('click', (event) => {
+  const button = event.target.closest('.plan-select');
+  if(button) iniciarCheckout(button.dataset.plan);
+});
 
 (async function iniciarPaginaAssinatura(){
   try{
@@ -123,7 +142,8 @@ checkoutButton.addEventListener('click', iniciarCheckout);
     }
   }catch(error){
     statusElement.textContent = 'Não foi possível consultar sua assinatura.';
-    checkoutButton.hidden = true;
+    planList.hidden = true;
+    checkoutCard.classList.remove('has-plans');
     mostrarErro(error.message || 'Tente novamente mais tarde.');
   }
 })();

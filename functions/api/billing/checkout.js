@@ -15,6 +15,12 @@ const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
   "unpaid"
 ]);
 
+const PLAN_PRICE_SETTINGS = {
+  prescricao_mensal: "STRIPE_PRICE_PRESCRICAO_MENSAL",
+  pro_mensal: "STRIPE_PRICE_PRO_MENSAL",
+  pro_trimestral: "STRIPE_PRICE_PRO_TRIMESTRAL"
+};
+
 export async function onRequestPost({ request, env }) {
   if (!isSameOrigin(request)) {
     return jsonResponse({ error: "Origem da solicitação não autorizada." }, 403);
@@ -24,6 +30,20 @@ export async function onRequestPost({ request, env }) {
   }
 
   try {
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return jsonResponse({ error: "Selecione um plano válido." }, 400);
+    }
+    const priceSetting = typeof body?.plan === "string" &&
+      Object.prototype.hasOwnProperty.call(PLAN_PRICE_SETTINGS, body.plan)
+      ? PLAN_PRICE_SETTINGS[body.plan]
+      : null;
+    if (!priceSetting) {
+      return jsonResponse({ error: "Selecione um plano válido." }, 400);
+    }
+
     const user = await getAuthenticatedUser(request, env);
     if (!user) {
       return jsonResponse({ error: "Entre na sua conta para continuar." }, 401);
@@ -32,7 +52,6 @@ export async function onRequestPost({ request, env }) {
     const requiredStripeSettings = [
       "STRIPE_SECRET_KEY",
       "STRIPE_PUBLISHABLE_KEY",
-      "STRIPE_PRICE_ID",
       "STRIPE_WEBHOOK_SECRET"
     ];
     const missingStripeSettings = requiredStripeSettings.filter(
@@ -42,6 +61,12 @@ export async function onRequestPost({ request, env }) {
       console.error("Configuração Stripe ausente:", missingStripeSettings.join(", "));
       return jsonResponse({
         error: `Configuração de pagamento incompleta. Configure: ${missingStripeSettings.join(", ")}.`
+      }, 503);
+    }
+    if (typeof env[priceSetting] !== "string" || !env[priceSetting].trim()) {
+      console.error(`Configuração Stripe ausente: ${priceSetting}`);
+      return jsonResponse({
+        error: "O preço deste plano ainda não está configurado."
       }, 503);
     }
 
@@ -55,8 +80,9 @@ export async function onRequestPost({ request, env }) {
     const form = new URLSearchParams();
     form.set("mode", "subscription");
     form.set("ui_mode", "form");
-    form.set("line_items[0][price]", env.STRIPE_PRICE_ID);
+    form.set("line_items[0][price]", env[priceSetting]);
     form.set("line_items[0][quantity]", "1");
+    form.set("subscription_data[metadata][plan]", body.plan);
     form.set("billing_address_collection", "auto");
     form.set("phone_number_collection[enabled]", "false");
     form.set("automatic_tax[enabled]", "false");
