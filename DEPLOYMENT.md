@@ -4,19 +4,19 @@ O fórum e as contas usam Cloudflare D1. As Cloudflare Pages Functions dependem 
 
 ## Criar o banco e aplicar a migração
 
-1. Crie um banco D1 no painel Cloudflare ou execute `npx wrangler d1 create guias-medicina`.
-2. No projeto Pages, acesse **Settings → Functions → D1 database bindings**, adicione o binding `DB` e selecione o banco criado. Faça um novo deploy depois de salvar o binding.
-3. Na raiz do repositório, aplique as tabelas ao banco remoto:
+1. O projeto está configurado para usar o banco D1 `guias-medicina-db` pelo binding `DB` definido em `wrangler.json`.
+2. No projeto Pages, confirme em **Settings → Functions → D1 database bindings** que `DB` aponta para esse banco. Faça um novo deploy depois de salvar o binding.
+3. Na raiz do repositório, aplique as migrações ao banco remoto:
 
    ```sh
-   npx wrangler d1 migrations apply guias-medicina --remote --directory=./migrations
+   npx wrangler d1 migrations apply guias-medicina-db --remote
    ```
 
-   Se o banco tiver outro nome, substitua `guias-medicina` pelo nome escolhido.
+4. Confirme no painel Cloudflare que as tabelas `users`, `sessions` e `comments` foram criadas e que as migrações de assinatura foram aplicadas.
 
-4. Confirme no painel Cloudflare que as tabelas `users`, `sessions` e `comments` foram criadas.
+Para desenvolvimento local com `wrangler pages dev`, o binding D1 já está definido no `wrangler.json`. Não publique credenciais ou configurações privadas em arquivos versionados sem necessidade.
 
-Para desenvolvimento local com `wrangler pages dev`, configure também o binding `DB` no arquivo local de configuração do Wrangler, usando o ID do banco criado. Não publique credenciais ou configurações privadas em arquivos versionados sem necessidade.
+O banco de produção já existia antes do controle de migrações do Wrangler. O histórico foi reconciliado após verificar o schema existente, e a migração `0003_stripe_subscriptions.sql` foi aplicada. Não insira registros manualmente em `d1_migrations` em outros bancos; em um D1 novo, aplique as migrações normalmente pelo comando acima.
 
 ## Contas existentes
 
@@ -28,7 +28,7 @@ O banco armazena nome, e-mail, hash de senha com salt, sessões com expiração 
 
 ## Simulador OSCE com Google AI Studio
 
-O atendimento e o debriefing usam `functions/api/osce-ai.js`, que chama o endpoint compatível com OpenAI do Google AI Studio. A chave é lida por `context.env` no servidor e não é enviada ao navegador.
+O atendimento e o debriefing usam `functions/api/osce-ai.js`, e a análise de prescrição usa `functions/api/prescricao.js`; ambos chamam o endpoint compatível com OpenAI do Google AI Studio e leem a mesma chave `API_KEY` por `context.env`, sem enviá-la ao navegador.
 
 Para publicar por upload direto e incluir a Cloudflare Pages Function, execute a partir da raiz do repositório:
 
@@ -50,4 +50,24 @@ Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha
 npx wrangler pages dev
 ```
 
-O arquivo `.dev.vars` deve definir `BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/`, `API_KEY` e `MODEL=gemini-3.8-flash`. O `wrangler.json` define a URL e o modelo para deploys que usam Wrangler; a Function também usa esses valores como padrão quando o Pages publicado pelo painel não injeta `vars` do arquivo. Em **Pages → Settings → Variables and Secrets**, configure `API_KEY` separadamente para Production e Preview e marque-a como segredo. Não coloque a chave em `wrangler.json` nem no código.
+O arquivo `.dev.vars` deve definir `BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai/`, `API_KEY` e `MODEL=gemini-3.8-flash`. O `wrangler.json` define a URL e o modelo para deploys que usam Wrangler; a Function também usa esses valores como padrão quando o Pages publicado pelo painel não injeta `vars` do arquivo. Em **Pages → Settings → Variables and Secrets**, configure `API_KEY` separadamente para Production e Preview e marque-a como segredo. Também é possível gravar o segredo diretamente no projeto Pages pelo Wrangler:
+
+```powershell
+npx.cmd wrangler pages secret put API_KEY --project-name=guias-medicina
+```
+
+O Wrangler pedirá o valor no terminal. Não o inclua no comando, em `wrangler.json` nem no código. Faça uma nova implantação depois de atualizar o segredo.
+
+Depois de adicionar ou alterar `API_KEY`, faça uma nova implantação para que o segredo seja vinculado às Functions. O domínio de produção deste projeto é `pegadiretriz.com.br`.
+
+## Assinaturas Stripe e cotas de IA
+
+A migração `migrations/0002_subscription_and_ai_quotas.sql` adiciona à tabela `users` o vínculo com o cliente Stripe, o status de assinatura e os contadores de uso. Contas existentes recebem `subscription_status='free'`, `osce_trial_used=0` e `prescriptions_today_count=0`.
+
+Confira o nome do banco D1 vinculado ao binding `DB` e aplique a migração remota a partir da raiz:
+
+```powershell
+npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
+```
+
+O banco D1 remoto já foi reconciliado com o histórico de migrações e recebeu a migração de assinatura. Para uma nova configuração do checkout — chaves, preço, webhook, testes e fluxo — consulte [STRIPE_INTEGRATION_TODO.md](./STRIPE_INTEGRATION_TODO.md), a fonte única para os próximos passos de Stripe.
