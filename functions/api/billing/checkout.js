@@ -29,8 +29,20 @@ export async function onRequestPost({ request, env }) {
       return jsonResponse({ error: "Entre na sua conta para continuar." }, 401);
     }
 
-    if (!env.STRIPE_PRICE_ID || !env.STRIPE_PUBLISHABLE_KEY) {
-      return jsonResponse({ error: "A configuração de pagamento está incompleta." }, 503);
+    const requiredStripeSettings = [
+      "STRIPE_SECRET_KEY",
+      "STRIPE_PUBLISHABLE_KEY",
+      "STRIPE_PRICE_ID",
+      "STRIPE_WEBHOOK_SECRET"
+    ];
+    const missingStripeSettings = requiredStripeSettings.filter(
+      (setting) => typeof env[setting] !== "string" || !env[setting].trim()
+    );
+    if (missingStripeSettings.length) {
+      console.error("Configuração Stripe ausente:", missingStripeSettings.join(", "));
+      return jsonResponse({
+        error: `Configuração de pagamento incompleta. Configure: ${missingStripeSettings.join(", ")}.`
+      }, 503);
     }
 
     const account = await env.DB.prepare(
