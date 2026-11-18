@@ -148,6 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const result = document.getElementById('prescricaoResult');
   const status = document.getElementById('prescricaoStatus');
   const analysis = document.getElementById('prescricaoAnalysis');
+  const upgrade = document.getElementById('prescricaoUpgrade');
 
   CASOS_CLINICOS.forEach((caso) => {
     const option = document.createElement('option');
@@ -208,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
     result.classList.remove('has-error');
     status.textContent = 'A análise pode levar alguns instantes.';
     analysis.textContent = '';
+    upgrade.hidden = true;
+    let requiresUpgrade = false;
 
     try {
       const response = await fetch('/api/prescricao', {
@@ -226,6 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!response.ok) {
+        requiresUpgrade = data?.requiresUpgrade === true;
         throw new Error(data?.error || data?.message || 'Não foi possível analisar a prescrição. Tente novamente.');
       }
       if (typeof data?.analise !== 'string' || !data.analise.trim()) {
@@ -236,6 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
       analysis.textContent = data.analise;
     } catch (error) {
       result.classList.add('has-error');
+      upgrade.hidden = !requiresUpgrade;
       status.textContent = error instanceof TypeError
         ? 'Não foi possível conectar à API. Verifique a conexão e tente novamente.'
         : error.message;

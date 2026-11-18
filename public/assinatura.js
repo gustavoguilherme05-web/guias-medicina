@@ -12,20 +12,39 @@ function mostrarErro(mensagem){
 }
 
 async function consultarAssinatura(){
-  const response = await fetch('/api/billing/status', { credentials: 'same-origin' });
-  const data = await response.json();
-  if(response.status === 401){
-    const destino = encodeURIComponent('assinatura.html' + window.location.search);
-    window.location.replace('login.html?redirect=' + destino);
-    return null;
+  const controller = new AbortController();
+  const timeoutId = window.setTimeout(() => controller.abort(), 8000);
+  try{
+    const response = await fetch('/api/billing/status', {
+      credentials: 'same-origin',
+      signal: controller.signal
+    });
+    const data = await response.json();
+    if(response.status === 401){
+      return { status: 'unauthenticated', canStartCheckout: true };
+    }
+    if(!response.ok) throw new Error(data?.error || 'Não foi possível consultar sua assinatura.');
+    return data;
+  }catch(error){
+    if(error.name === 'AbortError'){
+      throw new Error('A consulta da assinatura excedeu o tempo limite.');
+    }
+    throw error;
+  }finally{
+    window.clearTimeout(timeoutId);
   }
-  if(!response.ok) throw new Error(data?.error || 'Não foi possível consultar sua assinatura.');
-  return data;
 }
 
 async function atualizarStatus(){
   const data = await consultarAssinatura();
   if(!data) return;
+
+  if(data.status === 'unauthenticated'){
+    statusElement.textContent = 'Entre na sua conta ao selecionar um plano para continuar.';
+    planList.hidden = false;
+    checkoutCard.classList.add('has-plans');
+    return null;
+  }
 
   if(data.status === 'active' || data.status === 'trialing'){
     statusElement.textContent = data.status === 'trialing'
@@ -71,6 +90,11 @@ async function iniciarCheckout(plan){
       body: JSON.stringify({ plan })
     });
     const data = await response.json();
+    if(response.status === 401){
+      const destino = encodeURIComponent('assinatura.html' + window.location.search);
+      window.location.replace('login.html?redirect=' + destino);
+      return;
+    }
     if(!response.ok) throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
     if(typeof window.Stripe !== 'function') throw new Error('O formulário de pagamento não carregou. Atualize a página e tente novamente.');
 
@@ -134,16 +158,15 @@ planList.addEventListener('click', (event) => {
 (async function iniciarPaginaAssinatura(){
   try{
     const ativa = await atualizarStatus();
-    if(checkoutReturned && !ativa){
+    if(checkoutReturned && ativa === false){
       for(let tentativa = 0; tentativa < 5; tentativa += 1){
         await new Promise(resolve => setTimeout(resolve, 2000));
         if(await atualizarStatus()) break;
       }
     }
   }catch(error){
-    statusElement.textContent = 'Não foi possível consultar sua assinatura.';
-    planList.hidden = true;
-    checkoutCard.classList.remove('has-plans');
-    mostrarErro(error.message || 'Tente novamente mais tarde.');
+    statusElement.textContent = 'Não foi possível confirmar sua assinatura. Os planos continuam disponíveis abaixo.';
+    planList.hidden = false;
+    checkoutCard.classList.add('has-plans');
   }
 })();

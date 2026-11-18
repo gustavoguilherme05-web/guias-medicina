@@ -584,6 +584,8 @@ body.dark{
 .prescricao-result p{ color:var(--ink-soft); font-size:.9rem; }
 .prescricao-result.has-error{ border-left-color:#B54736; }
 .prescricao-result.has-error p{ color:#B54736; }
+.prescricao-upgrade{ display:flex; align-items:center; flex-wrap:wrap; gap:12px; margin-top:18px; }
+.prescricao-upgrade[hidden]{ display:none; }
 .prescricao-analysis{ white-space:pre-wrap; line-height:1.7; overflow-wrap:anywhere; }
 body.dark .prescricao-result.has-error p{ color:#F09A8B; }
 
