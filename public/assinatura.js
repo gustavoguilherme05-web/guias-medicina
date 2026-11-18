@@ -3,6 +3,9 @@ const planList = document.getElementById('plan-list');
 const checkoutStep = document.getElementById('checkout-step');
 const checkoutContainer = document.getElementById('checkout-form');
 const errorElement = document.getElementById('checkoutError');
+const cpfStep = document.getElementById('cpf-step');
+const cpfForm = document.getElementById('cpf-form');
+const cpfInput = document.getElementById('accountCpf');
 const checkoutCard = planList.closest('.checkout-card');
 const planButtons = [...document.querySelectorAll('.plan-select')];
 const selectedPlanSummary = document.getElementById('selectedPlanSummary');
@@ -11,13 +14,29 @@ const requestedPlan = new URLSearchParams(window.location.search).get('plan');
 const planLabels = {
   prescricao_mensal: 'Treino de Prescrição — R$ 19,90/mês',
   pro_mensal: 'Pega Diretriz PRO — R$ 29,90/mês',
-  pro_trimestral: 'PRO Trimestral — R$ 79,90 a cada 3 meses'
+  experience: 'EXPERIÊNCIA — R$ 14,90 por 7 dias (pagamento único)'
 };
 const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
 
 function mostrarErro(mensagem){
   errorElement.textContent = mensagem;
   errorElement.hidden = false;
+}
+
+function aguardarComLimite(promise, duracao, mensagem){
+  return new Promise((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => reject(new Error(mensagem)), duracao);
+    Promise.resolve(promise).then(
+      resultado => {
+        window.clearTimeout(timeoutId);
+        resolve(resultado);
+      },
+      erro => {
+        window.clearTimeout(timeoutId);
+        reject(erro);
+      }
+    );
+  });
 }
 
 async function consultarAssinatura(){
@@ -50,15 +69,29 @@ async function atualizarStatus(){
 
   if(data.status === 'unauthenticated'){
     statusElement.textContent = 'Entre na sua conta ao selecionar um plano para continuar.';
+    cpfStep.hidden = true;
     planList.hidden = false;
+    checkoutStep.hidden = true;
     checkoutCard.classList.add('has-plans');
     return null;
   }
 
+  if(data.requiresCpf){
+    statusElement.textContent = 'Informe seu CPF para proteger sua conta e continuar.';
+    planList.hidden = true;
+    checkoutStep.hidden = true;
+    cpfStep.hidden = false;
+    checkoutCard.classList.remove('has-plans');
+    return false;
+  }
+
+  cpfStep.hidden = true;
   if(data.status === 'active' || data.status === 'trialing'){
-    statusElement.textContent = data.status === 'trialing'
-      ? 'Sua assinatura está em período de avaliação.'
-      : 'Sua assinatura está ativa.';
+    statusElement.textContent = data.experienceExpiresAt
+      ? `Seu plano EXPERIÊNCIA está ativo até ${new Date(data.experienceExpiresAt).toLocaleString('pt-BR')}.`
+      : (data.status === 'trialing'
+        ? 'Sua assinatura está em período de avaliação.'
+        : 'Sua assinatura está ativa.');
     planList.hidden = true;
     checkoutCard.classList.remove('has-plans');
     return true;
@@ -114,6 +147,18 @@ async function iniciarCheckout(plan){
       window.location.replace('login.html?redirect=' + destino);
       return;
     }
+    if(data?.requiresCpf){
+      cpfStep.hidden = false;
+      planList.hidden = true;
+      checkoutStep.hidden = true;
+      checkoutCard.classList.remove('has-plans');
+      statusElement.textContent = 'Informe seu CPF para proteger sua conta e continuar.';
+      planButtons.forEach(button => {
+        button.disabled = false;
+        button.textContent = 'Selecionar plano';
+      });
+      return;
+    }
     if(!response.ok) throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
     if(typeof window.Stripe !== 'function') throw new Error('O formulário de pagamento não carregou. Atualize a página e tente novamente.');
 
@@ -142,19 +187,40 @@ async function iniciarCheckout(plan){
     planList.hidden = true;
     checkoutStep.hidden = false;
     checkoutCard.classList.remove('has-plans');
-    statusElement.textContent = 'Preencha os dados abaixo para concluir a assinatura.';
+    statusElement.textContent = 'Carregando o formulário seguro de pagamento...';
     checkoutForm.mount('#checkout-form');
     checkoutStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    const actionsResult = await checkout.loadActions();
+    const actionsResult = await aguardarComLimite(
+      checkout.loadActions(),
+      15000,
+      'O formulário de pagamento demorou para carregar. Tente novamente.'
+    );
     if(actionsResult.type !== 'success'){
       throw new Error('Não foi possível carregar as ações de pagamento.');
     }
+    statusElement.textContent = 'Preencha os dados abaixo para concluir a assinatura.';
     checkoutForm.on('confirm', async (event) => {
       try{
         const result = await actionsResult.actions.confirm({ formConfirmEvent: event });
         if(result?.type === 'error'){
           mostrarErro(result.error?.message || 'Não foi possível confirmar o pagamento.');
+        }else if(result?.type === 'success'){
+          statusElement.textContent = 'Pagamento confirmado. Ativando seu acesso...';
+          let acessoAtivado = false;
+          for(let tentativa = 0; tentativa < 6; tentativa += 1){
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            const ativa = await atualizarStatus();
+            if(ativa){
+              checkoutContainer.replaceChildren();
+              checkoutStep.hidden = true;
+              acessoAtivado = true;
+              break;
+            }
+          }
+          if(!acessoAtivado){
+            statusElement.textContent = 'Pagamento confirmado. A ativação segura ainda está em processamento; atualize esta página em instantes.';
+          }
         }
       }catch(error){
         mostrarErro(error.message || 'Não foi possível confirmar o pagamento.');
@@ -168,6 +234,7 @@ async function iniciarCheckout(plan){
     checkoutContainer.replaceChildren();
     checkoutStep.hidden = true;
     planList.hidden = false;
+    cpfStep.hidden = true;
     checkoutCard.classList.add('has-plans');
     statusElement.textContent = 'Não foi possível abrir o checkout. Confira a mensagem abaixo e tente novamente.';
     planButtons.forEach(button => {
@@ -182,9 +249,40 @@ planList.addEventListener('click', (event) => {
   if(button) iniciarCheckout(button.dataset.plan);
 });
 
+cpfInput.addEventListener('input', () => {
+  cpfInput.value = formatarCpf(cpfInput.value);
+});
+
+cpfForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = cpfForm.querySelector('button[type="submit"]');
+  button.disabled = true;
+  errorElement.hidden = true;
+  try{
+    const response = await fetch('/api/auth/cpf', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cpf: cpfInput.value })
+    });
+    const data = await response.json();
+    if(!response.ok) throw new Error(data?.error || 'Não foi possível salvar seu CPF.');
+    cpfStep.hidden = true;
+    await atualizarStatus();
+    if(requestedPlan && planButtons.some(button => button.dataset.plan === requestedPlan)){
+      await iniciarCheckout(requestedPlan);
+    }
+  }catch(error){
+    mostrarErro(error.message || 'Não foi possível salvar seu CPF agora.');
+  }finally{
+    button.disabled = false;
+  }
+});
+
 changePlanButton.addEventListener('click', () => {
   checkoutContainer.replaceChildren();
   checkoutStep.hidden = true;
+  cpfStep.hidden = true;
   planList.hidden = false;
   checkoutCard.classList.add('has-plans');
   statusElement.textContent = 'Escolha o plano ideal para seus estudos.';
@@ -199,7 +297,7 @@ changePlanButton.addEventListener('click', () => {
     const ativa = await atualizarStatus();
     if(requestedPlan &&
        planButtons.some(button => button.dataset.plan === requestedPlan) &&
-       ativa === false){
+       ativa === false && cpfStep.hidden){
       await iniciarCheckout(requestedPlan);
       return;
     }

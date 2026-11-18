@@ -25,9 +25,9 @@
   <section class="checkout-card has-plans" aria-labelledby="checkoutTitle">
     <span class="home-section-eyebrow">ASSINATURA PAD</span>
     <h1 id="checkoutTitle">Escolha seu plano</h1>
-    <p class="checkout-description">Selecione o plano ideal para seus estudos. A cobrança é recorrente e o pagamento é processado com segurança pela Stripe.</p>
+    <p class="checkout-description">Escolha seu plano. Os planos mensais são cobrados a cada mês; o EXPERIÊNCIA é uma compra única com acesso por 7 dias. Pagamento processado com segurança pela Stripe.</p>
     <p id="subscriptionStatus" class="checkout-status" role="status" aria-live="polite">Consultando sua conta...</p>
-    <div id="plan-list" class="plan-list" aria-label="Planos disponíveis">
+    <div id="plan-list" class="plan-list" role="region" aria-label="Planos disponíveis" tabindex="0">
       <article class="plan-card">
         <h2 class="plan-title">Treino de Prescrição</h2>
         <p class="plan-price">R$ 19,90<span>/mês</span></p>
@@ -50,20 +50,32 @@
         <button class="btn btn-primary plan-select" type="button" data-plan="pro_mensal">Selecionar plano</button>
       </article>
       <article class="plan-card">
-        <h2 class="plan-title">PRO Trimestral</h2>
-        <p class="plan-price">R$ 79,90<span>/3 meses</span></p>
+        <h2 class="plan-title">EXPERIÊNCIA</h2>
+        <p class="plan-price">R$ 14,90<span>/7 dias</span></p>
         <ul class="plan-features">
-          <li>Todos os recursos do plano PRO</li>
-          <li>Economia de R$ 9,80 no período</li>
-          <li>Cobrança a cada 3 meses</li>
+          <li>Acesso ao simulador OSCE</li>
+          <li>Acesso ao treino de prescrição</li>
+          <li>Pagamento único, sem renovação automática</li>
         </ul>
-        <button class="btn btn-ghost plan-select" type="button" data-plan="pro_trimestral">Selecionar plano</button>
+        <button class="btn btn-ghost plan-select" type="button" data-plan="experience">Selecionar plano</button>
       </article>
+    </div>
+    <p class="plan-list-hint">Deslize para o lado para ver os planos.</p>
+    <div id="cpf-step" class="cpf-step" hidden>
+      <h2>Complete seu cadastro</h2>
+      <p>Informe seu CPF para proteger sua conta e continuar. Ele será usado somente para impedir cadastros duplicados.</p>
+      <form id="cpf-form" class="cpf-form" novalidate>
+        <div class="form-group">
+          <label for="accountCpf">CPF</label>
+          <input type="text" id="accountCpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" required>
+        </div>
+        <button class="btn btn-primary" type="submit">Salvar CPF e continuar</button>
+      </form>
     </div>
     <div id="checkout-step" class="checkout-step" hidden>
       <div class="checkout-step-heading">
         <div>
-          <h2>Finalize sua assinatura</h2>
+          <h2>Finalize sua compra</h2>
           <p id="selectedPlanSummary"></p>
         </div>
         <button id="changePlan" class="btn btn-ghost" type="button">Voltar aos planos</button>
@@ -79,6 +91,7 @@
   <nav>
     <a href="sobre.html">Sobre</a>
     <a href="privacidade.html">Política de Privacidade</a>
+    <a href="cancelamento.html">Cancelamento e Reembolso</a>
     <a href="contato.html">Contato</a>
   </nav>
   <span class="copyright">© 2026 PAD. Todos os direitos reservados.</span>

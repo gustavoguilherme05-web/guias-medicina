@@ -4,6 +4,7 @@ import {
   hashText,
   jsonResponse
 } from "../_shared/auth.js";
+import { expireExperienceIfNeeded } from "../_shared/experience.js";
 
 const OSCE_CHECKLIST = [
   { id: "symptoms", label: "Investigou sintomas e início do quadro" },
@@ -95,6 +96,7 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: "Entre na sua conta para usar o simulador OSCE." }, 401);
     }
 
+    await expireExperienceIfNeeded(env, user.email);
     account = await env.DB.prepare(`
       SELECT subscription_status, subscription_plan, osce_trial_used,
              osce_trial_session_hash, osce_trial_session_expires_at
@@ -108,6 +110,12 @@ export async function onRequestPost(context) {
 
   if (!account) {
     return jsonResponse({ error: "Conta não encontrada." }, 401);
+  }
+  if (!user.hasCpf) {
+    return jsonResponse({
+      error: "Informe seu CPF na página de assinatura antes de usar o simulador.",
+      requiresCpf: true
+    }, 403);
   }
 
   let body;

@@ -79,3 +79,19 @@ npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
 ```
 
 Após a migração, reenvie os eventos `customer.subscription.updated` das assinaturas já existentes para preencher `subscription_plan`. O webhook usa o metadado do plano ou compara o preço da assinatura com os IDs configurados no ambiente.
+
+A migração `0005_unique_cpf.sql` adiciona um identificador HMAC único por CPF. Aplique-a antes de publicar a atualização do cadastro:
+
+```powershell
+npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
+```
+
+Configure `CPF_HASH_SECRET` como secret com pelo menos 32 caracteres aleatórios em **Pages → Settings → Variables and Secrets** (Production e Preview) e em `.dev.vars` para desenvolvimento local. Mantenha o mesmo valor em ambientes que compartilham o mesmo banco e não o rotacione sem um plano de migração; a aplicação não armazena CPF em texto puro. Contas já existentes informarão o CPF ao acessar recursos sujeitos a limites ou iniciar uma assinatura.
+
+A migração `0006_experience_access.sql` registra o prazo de expiração do plano EXPERIÊNCIA e a idempotência das compras recebidas pelo webhook. Aplique-a antes de publicar a nova versão:
+
+```powershell
+npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
+```
+
+Configure `STRIPE_PRICE_EXPERIENCIA` no Stripe como preço único (não recorrente) de R$ 14,90 e informe o respectivo ID no ambiente do Cloudflare e em `.dev.vars`.

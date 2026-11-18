@@ -1,4 +1,5 @@
 import { jsonResponse } from "../_shared/auth.js";
+import { getExperienceExpiry } from "../_shared/experience.js";
 import { stripeRequest } from "../_shared/stripe.js";
 
 const SUBSCRIPTION_STATUSES = new Set([
@@ -101,7 +102,8 @@ async function syncSubscription(env, subscriptionId, customerId, email) {
     await env.DB.prepare(`
       UPDATE users
       SET stripe_customer_id = ?, stripe_subscription_id = ?,
-          subscription_status = ?, subscription_plan = ?
+          subscription_status = ?, subscription_plan = ?,
+          experience_expires_at = NULL
       WHERE email = ?
     `).bind(customerId, subscription.id, subscription.status, plan, email).run();
     return;
@@ -109,9 +111,41 @@ async function syncSubscription(env, subscriptionId, customerId, email) {
 
   await env.DB.prepare(`
     UPDATE users
-    SET stripe_subscription_id = ?, subscription_status = ?, subscription_plan = ?
+    SET stripe_subscription_id = ?, subscription_status = ?, subscription_plan = ?,
+        experience_expires_at = NULL
     WHERE stripe_customer_id = ?
   `).bind(subscription.id, subscription.status, plan, customerId).run();
+}
+
+async function grantExperience(env, session, eventCreatedAt) {
+  const sessionId = stripeId(session.id);
+  const emailValue = session.metadata?.user_email ||
+    session.client_reference_id ||
+    session.customer_details?.email ||
+    session.customer_email;
+  const email = typeof emailValue === "string" ? emailValue.trim().toLowerCase() : "";
+  if (!sessionId || !email) {
+    throw new Error("Checkout Session de experiência sem identificador ou e-mail.");
+  }
+
+  const expiresAt = getExperienceExpiry(eventCreatedAt);
+  await env.DB.batch([
+    env.DB.prepare(`
+      UPDATE users
+      SET subscription_status = 'active',
+          subscription_plan = 'pro',
+          experience_expires_at = MAX(COALESCE(experience_expires_at, 0), ?)
+      WHERE email = ?
+        AND NOT EXISTS (
+          SELECT 1 FROM experience_purchases WHERE checkout_session_id = ?
+        )
+    `).bind(expiresAt, email, sessionId),
+    env.DB.prepare(`
+      INSERT OR IGNORE INTO experience_purchases
+        (checkout_session_id, user_email, expires_at)
+      VALUES (?, ?, ?)
+    `).bind(sessionId, email, expiresAt)
+  ]);
 }
 
 export async function onRequestPost({ request, env }) {
@@ -137,7 +171,11 @@ export async function onRequestPost({ request, env }) {
     const object = event?.data?.object;
     if (event.type === "checkout.session.completed" ||
         event.type === "checkout.session.async_payment_succeeded") {
-      if (object?.mode === "subscription") {
+      if (object?.mode === "payment" &&
+          object.metadata?.plan === "experience" &&
+          object.payment_status === "paid") {
+        await grantExperience(env, object, event.created);
+      } else if (object?.mode === "subscription") {
         const emailValue = object.metadata?.user_email ||
           object.client_reference_id ||
           object.customer_details?.email ||

@@ -78,8 +78,8 @@ async function enviarDadosAutenticacao(endpoint, dados){
   }
 }
 
-function cadastrarUsuario({ nome, email, senha }){
-  return enviarDadosAutenticacao('/api/auth/register', { nome, email, senha });
+function cadastrarUsuario({ nome, email, senha, cpf }){
+  return enviarDadosAutenticacao('/api/auth/register', { nome, email, senha, cpf });
 }
 
 function autenticarUsuario({ email, senha }){
@@ -151,6 +151,14 @@ function mostrarToast(mensagem, tipo = 'info'){
 
 function iniciais(nome){
   return nome.trim().split(/\s+/).slice(0, 2).map(p => p[0].toUpperCase()).join('');
+}
+
+function formatarCpf(valor){
+  const cpf = valor.replace(/\D/g, '').slice(0, 11);
+  return cpf
+    .replace(/^(\d{3})(\d)/, '$1.$2')
+    .replace(/^(\d{3})\.(\d{3})(\d)/, '$1.$2.$3')
+    .replace(/\.(\d{3})(\d)/, '.$1-$2');
 }
 
 function renderAuthArea(sessao = getSessaoAtiva()){

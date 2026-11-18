@@ -3,6 +3,7 @@ import {
   hasDatabase,
   jsonResponse
 } from "../_shared/auth.js";
+import { expireExperienceIfNeeded } from "../_shared/experience.js";
 
 const RUBRICAS_POR_CASO = {
   'amigdalite-bacteriana-aguda': {
@@ -90,6 +91,7 @@ export async function onRequestPost(context) {
       return jsonResponse({ error: "Entre na sua conta para usar o treino de prescrição." }, 401);
     }
 
+    await expireExperienceIfNeeded(env, user.email);
     account = await env.DB.prepare(`
       SELECT subscription_status, subscription_plan,
              prescriptions_today_count, last_prescription_date
@@ -103,6 +105,12 @@ export async function onRequestPost(context) {
 
   if (!account) {
     return jsonResponse({ error: "Conta não encontrada." }, 401);
+  }
+  if (!user.hasCpf) {
+    return jsonResponse({
+      error: "Informe seu CPF na página de assinatura antes de usar o treino.",
+      requiresCpf: true
+    }, 403);
   }
 
   let body;

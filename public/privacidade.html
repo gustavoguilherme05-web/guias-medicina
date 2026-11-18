@@ -49,7 +49,7 @@
   <h2>2. Quais informações coletamos</h2>
   <p>Quando você cria uma conta ou participa das discussões, armazenamos em banco de dados hospedado na Cloudflare:</p>
   <ul>
-    <li><strong>Conta:</strong> nome, e-mail, hash da senha com salt e data de criação. A senha em texto puro não é armazenada.</li>
+    <li><strong>Conta:</strong> nome, e-mail, CPF representado por um identificador criptográfico não reversível, hash da senha com salt e data de criação. O CPF em texto não é armazenado; o identificador é usado para evitar contas duplicadas. A senha em texto puro não é armazenada.</li>
     <li><strong>Sessão:</strong> um identificador aleatório em cookie protegido, com validade de até 7 dias; no banco, armazenamos apenas o hash do identificador e sua expiração.</li>
     <li><strong>Comentários:</strong> texto, diretriz relacionada, nome exibido e data de publicação. Comentários são públicos para qualquer visitante.</li>
     <li><strong>Preferências locais:</strong> tema, favoritos e histórico de leitura podem permanecer no armazenamento local do seu navegador.</li>
@@ -64,7 +64,7 @@
   <p>Se anúncios de terceiros forem ativados, esta política será atualizada para explicar as tecnologias e os dados envolvidos.</p>
 
   <h2>5. Compartilhamento de dados</h2>
-  <p>O serviço de hospedagem, banco de dados e execução do site é fornecido pela Cloudflare, que processa dados para disponibilizar a plataforma. Comentários e nome de exibição ficam visíveis publicamente. Não vendemos dados pessoais.</p>
+  <p>O serviço de hospedagem, banco de dados e execução do site é fornecido pela Cloudflare, que processa dados para disponibilizar a plataforma. A Stripe processa os pagamentos e os dados de cobrança informados no checkout. Comentários e nome de exibição ficam visíveis publicamente. Não vendemos dados pessoais.</p>
 
   <h2>6. Links para sites externos</h2>
   <p>Nossos guias podem conter links para fontes científicas, diretrizes médicas ou referências externas. Não nos responsabilizamos pelas práticas de privacidade desses sites. Sempre verifique a política de privacidade do destino antes de compartilhar dados pessoais.</p>
@@ -78,7 +78,7 @@
     <li>Solicitar confirmação, acesso, correção ou exclusão dos dados pessoais.</li>
     <li>Solicitar informações sobre o tratamento e exercer os demais direitos previstos na legislação aplicável.</li>
   </ul>
-  <p>Para fazer uma solicitação, entre em contato pela <a href="contato.html" style="color:var(--vital-dark); font-weight:600;">página de contato</a>. Apagar dados do navegador remove apenas preferências locais; isso não exclui sua conta nem comentários do banco de dados.</p>
+  <p>Para fazer uma solicitação, entre em contato pela <a href="contato.html" style="color:var(--vital-dark); font-weight:600;">página de contato</a>. O CPF em texto não é mantido após a validação; o identificador criptográfico associado à conta pode ser removido mediante solicitação, observadas as obrigações legais aplicáveis. Apagar dados do navegador remove apenas preferências locais; isso não exclui sua conta nem comentários do banco de dados.</p>
 
   <h2>9. Menores de idade</h2>
   <p>Nossos conteúdos são voltados para estudantes universitários de medicina, tipicamente maiores de 18 anos. Não coletamos intencionalmente dados de menores de 13 anos. Se você é responsável por um menor que forneceu dados sem seu consentimento, entre em contato para orientação.</p>
@@ -98,6 +98,7 @@
   <nav>
     <a href="sobre.html">Sobre</a>
     <a href="privacidade.html">Política de Privacidade</a>
+    <a href="cancelamento.html">Cancelamento e Reembolso</a>
     <a href="contato.html">Contato</a>
   </nav>
   <span class="copyright">© 2026 PAD. Todos os direitos reservados.</span>

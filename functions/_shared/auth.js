@@ -98,13 +98,13 @@ export async function getAuthenticatedUser(request, env) {
 
   const tokenHash = await hashText(token);
   const user = await env.DB.prepare(`
-    SELECT users.email, users.name
+    SELECT users.email, users.name, users.cpf_hash
     FROM sessions
     JOIN users ON users.email = sessions.email
     WHERE sessions.token_hash = ? AND sessions.expires_at > ?
   `).bind(tokenHash, Date.now()).first();
 
-  return user || null;
+  return user ? { ...user, hasCpf: Boolean(user.cpf_hash) } : null;
 }
 
 export async function createSession(email, env) {

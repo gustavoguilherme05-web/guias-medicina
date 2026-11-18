@@ -73,6 +73,12 @@
         <span class="form-error" id="erroCadEmail"></span>
       </div>
       <div class="form-group">
+        <label for="cadCpf">CPF</label>
+        <input type="text" id="cadCpf" inputmode="numeric" autocomplete="off" maxlength="14" placeholder="000.000.000-00" required>
+        <span class="form-hint">Usado para impedir múltiplas contas. O número não é armazenado; guardamos somente uma identificação criptográfica.</span>
+        <span class="form-error" id="erroCadCpf"></span>
+      </div>
+      <div class="form-group">
         <label for="cadSenha">Senha</label>
         <input type="password" id="cadSenha" autocomplete="new-password" required>
         <span class="form-hint">Mínimo de 8 caracteres.</span>
@@ -97,6 +103,7 @@
   <nav>
     <a href="sobre.html">Sobre</a>
     <a href="privacidade.html">Política de Privacidade</a>
+    <a href="cancelamento.html">Cancelamento e Reembolso</a>
     <a href="contato.html">Contato</a>
   </nav>
   <span class="copyright">© 2026 PAD. Todos os direitos reservados.</span>
@@ -111,6 +118,11 @@
   const formCadastro = document.getElementById('formCadastro');
   const btnSwitch = document.getElementById('btnSwitch');
   const textoSwitch = document.getElementById('textoSwitch');
+  const cadCpf = document.getElementById('cadCpf');
+
+  cadCpf.addEventListener('input', () => {
+    cadCpf.value = formatarCpf(cadCpf.value);
+  });
 
   function mostrarLogin(){
     tabLogin.classList.add('active'); tabCadastro.classList.remove('active');
@@ -182,12 +194,13 @@
     e.preventDefault();
     const botao = formCadastro.querySelector('button[type="submit"]');
     botao.disabled = true;
-    ['erroCadNome','erroCadEmail','erroCadSenha','erroCadSenha2'].forEach(id => {
+    ['erroCadNome','erroCadEmail','erroCadCpf','erroCadSenha','erroCadSenha2'].forEach(id => {
       document.getElementById(id).classList.remove('show');
     });
 
     const nome = document.getElementById('cadNome').value;
     const email = document.getElementById('cadEmail').value;
+    const cpf = cadCpf.value;
     const senha = document.getElementById('cadSenha').value;
     const senha2 = document.getElementById('cadSenha2').value;
 
@@ -198,16 +211,25 @@
     }
 
     try{
-      const resultado = await cadastrarUsuario({ nome, email, senha });
+      const resultado = await cadastrarUsuario({ nome, email, senha, cpf });
       if(!resultado.ok){
         mostrarToast(resultado.erro, 'erro');
         if(resultado.erro.includes('e-mail')) setErro('cadEmail', 'erroCadEmail', resultado.erro);
+        if(resultado.erro.toLowerCase().includes('cpf')) setErro('cadCpf', 'erroCadCpf', resultado.erro);
         if(resultado.erro.includes('senha')) setErro('cadSenha', 'erroCadSenha', resultado.erro);
         if(resultado.erro.includes('nome')) setErro('cadNome', 'erroCadNome', resultado.erro);
         return;
       }
       mostrarToast('Conta criada com sucesso! Bem-vindo(a).', 'sucesso');
-      setTimeout(() => window.location.href = 'perfil.html', 600);
+      let destino = 'perfil.html';
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      if(redirect){
+        try{
+          const url = new URL(redirect, window.location.href);
+          if(url.origin === window.location.origin) destino = url.pathname + url.search + url.hash;
+        }catch{}
+      }
+      setTimeout(() => window.location.href = destino, 600);
     }finally{
       botao.disabled = false;
     }

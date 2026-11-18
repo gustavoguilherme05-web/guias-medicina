@@ -4,6 +4,7 @@ import {
   isSameOrigin,
   jsonResponse
 } from "../../_shared/auth.js";
+import { expireExperienceIfNeeded } from "../../_shared/experience.js";
 import { stripeRequest } from "../../_shared/stripe.js";
 
 const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
@@ -20,7 +21,7 @@ const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
 const PLAN_PRICE_SETTINGS = {
   prescricao_mensal: "STRIPE_PRICE_PRESCRICAO_MENSAL",
   pro_mensal: "STRIPE_PRICE_PRO_MENSAL",
-  pro_trimestral: "STRIPE_PRICE_PRO_TRIMESTRAL"
+  experience: "STRIPE_PRICE_EXPERIENCIA"
 };
 
 export async function onRequestPost({ request, env }) {
@@ -50,6 +51,7 @@ export async function onRequestPost({ request, env }) {
     if (!user) {
       return jsonResponse({ error: "Entre na sua conta para continuar." }, 401);
     }
+    await expireExperienceIfNeeded(env, user.email);
 
     const requiredStripeSettings = [
       "STRIPE_SECRET_KEY",
@@ -72,18 +74,29 @@ export async function onRequestPost({ request, env }) {
     }
 
     const account = await env.DB.prepare(
-      "SELECT stripe_customer_id, subscription_status FROM users WHERE email = ?"
+      "SELECT stripe_customer_id, subscription_status, cpf_hash FROM users WHERE email = ?"
     ).bind(user.email).first();
+    if (!account?.cpf_hash) {
+      return jsonResponse({
+        error: "Informe seu CPF antes de continuar para o checkout.",
+        requiresCpf: true
+      }, 409);
+    }
     if (ACTIVE_SUBSCRIPTION_STATUSES.has(account?.subscription_status)) {
       return jsonResponse({ error: "Sua conta já possui uma assinatura em andamento." }, 409);
     }
 
+    const isExperience = body.plan === "experience";
     const form = new URLSearchParams();
-    form.set("mode", "subscription");
+    form.set("mode", isExperience ? "payment" : "subscription");
     form.set("ui_mode", "form");
+    if (user.email.length <= 200) {
+      form.set("client_reference_id", user.email);
+    }
+    form.set("metadata[plan]", body.plan);
+    form.set("metadata[user_email]", user.email);
     form.set("line_items[0][price]", env[priceSetting]);
     form.set("line_items[0][quantity]", "1");
-    form.set("subscription_data[metadata][plan]", body.plan);
     form.set("billing_address_collection", "auto");
     form.set("phone_number_collection[enabled]", "false");
     form.set("automatic_tax[enabled]", "false");
@@ -92,7 +105,12 @@ export async function onRequestPost({ request, env }) {
     form.set("payment_method_collection", "always");
     form.set("submit_type", "auto");
     form.set("integration_identifier", "custom_embedded_web_0001");
-    form.set("saved_payment_method_options[payment_method_save]", "enabled");
+    if (isExperience) {
+      form.set("payment_intent_data[metadata][plan]", body.plan);
+    } else {
+      form.set("subscription_data[metadata][plan]", body.plan);
+      form.set("saved_payment_method_options[payment_method_save]", "enabled");
+    }
 
     const session = await stripeRequest(env, "checkout/sessions", {
       method: "POST",
