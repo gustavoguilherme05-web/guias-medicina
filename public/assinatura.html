@@ -60,7 +60,16 @@
         <button class="btn btn-ghost plan-select" type="button" data-plan="pro_trimestral">Selecionar plano</button>
       </article>
     </div>
-    <div id="checkout-form" class="checkout-form" hidden></div>
+    <div id="checkout-step" class="checkout-step" hidden>
+      <div class="checkout-step-heading">
+        <div>
+          <h2>Finalize sua assinatura</h2>
+          <p id="selectedPlanSummary"></p>
+        </div>
+        <button id="changePlan" class="btn btn-ghost" type="button">Voltar aos planos</button>
+      </div>
+      <div id="checkout-form" class="checkout-form"></div>
+    </div>
     <p id="checkoutError" class="checkout-error" role="alert" hidden></p>
     <a class="checkout-back" href="index.html">Voltar para o início</a>
   </section>

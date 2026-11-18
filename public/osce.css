@@ -283,7 +283,7 @@
 @media(max-width:380px){
   .osce-top-nav{gap:10px}
   .osce-top-nav a{font-size:.65rem}
-  .osce-top-label{font-size:.55rem}
+  .osce-top-label{display:none}
   .osce-report-tag{font-size:0}
   .osce-report-tag span{font-size:.65rem}
   .osce-briefing-card{padding-right:16px;padding-left:16px}

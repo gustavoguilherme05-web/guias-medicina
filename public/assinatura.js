@@ -1,9 +1,18 @@
 const statusElement = document.getElementById('subscriptionStatus');
 const planList = document.getElementById('plan-list');
+const checkoutStep = document.getElementById('checkout-step');
 const checkoutContainer = document.getElementById('checkout-form');
 const errorElement = document.getElementById('checkoutError');
 const checkoutCard = planList.closest('.checkout-card');
 const planButtons = [...document.querySelectorAll('.plan-select')];
+const selectedPlanSummary = document.getElementById('selectedPlanSummary');
+const changePlanButton = document.getElementById('changePlan');
+const requestedPlan = new URLSearchParams(window.location.search).get('plan');
+const planLabels = {
+  prescricao_mensal: 'Treino de Prescrição — R$ 19,90/mês',
+  pro_mensal: 'Pega Diretriz PRO — R$ 29,90/mês',
+  pro_trimestral: 'PRO Trimestral — R$ 79,90 a cada 3 meses'
+};
 const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
 
 function mostrarErro(mensagem){
@@ -80,24 +89,35 @@ async function iniciarCheckout(plan){
     button.disabled = true;
   });
   selectedButton.textContent = 'Preparando checkout...';
+  statusElement.textContent = 'Preparando seu pagamento com segurança...';
   errorElement.hidden = true;
 
   try{
-    const response = await fetch('/api/billing/checkout', {
-      method: 'POST',
-      credentials: 'same-origin',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan })
-    });
-    const data = await response.json();
+    const controller = new AbortController();
+    const timeoutId = window.setTimeout(() => controller.abort(), 15000);
+    let response;
+    let data;
+    try{
+      response = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan }),
+        signal: controller.signal
+      });
+      data = await response.json();
+    }finally{
+      window.clearTimeout(timeoutId);
+    }
     if(response.status === 401){
-      const destino = encodeURIComponent('assinatura.html' + window.location.search);
+      const destino = encodeURIComponent(`assinatura.html?plan=${encodeURIComponent(plan)}`);
       window.location.replace('login.html?redirect=' + destino);
       return;
     }
     if(!response.ok) throw new Error(data?.error || 'Não foi possível iniciar o checkout.');
     if(typeof window.Stripe !== 'function') throw new Error('O formulário de pagamento não carregou. Atualize a página e tente novamente.');
 
+    selectedPlanSummary.textContent = planLabels[plan];
     const stripe = window.Stripe(data.publishable_key);
     const checkout = stripe.initCheckoutFormSdk({
       clientSecret: data.client_secret,
@@ -120,8 +140,11 @@ async function iniciarCheckout(plan){
     });
     const checkoutForm = checkout.createForm({ layout: 'expanded' });
     planList.hidden = true;
-    checkoutContainer.hidden = false;
+    checkoutStep.hidden = false;
+    checkoutCard.classList.remove('has-plans');
+    statusElement.textContent = 'Preencha os dados abaixo para concluir a assinatura.';
     checkoutForm.mount('#checkout-form');
+    checkoutStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
     const actionsResult = await checkout.loadActions();
     if(actionsResult.type !== 'success'){
@@ -138,11 +161,15 @@ async function iniciarCheckout(plan){
       }
     });
   }catch(error){
-    mostrarErro(error.message || 'Não foi possível iniciar o checkout agora.');
+    const mensagem = error.name === 'AbortError'
+      ? 'A preparação do checkout excedeu o tempo limite. Tente novamente.'
+      : (error.message || 'Não foi possível iniciar o checkout agora.');
+    mostrarErro(mensagem);
     checkoutContainer.replaceChildren();
-    checkoutContainer.hidden = true;
+    checkoutStep.hidden = true;
     planList.hidden = false;
     checkoutCard.classList.add('has-plans');
+    statusElement.textContent = 'Não foi possível abrir o checkout. Confira a mensagem abaixo e tente novamente.';
     planButtons.forEach(button => {
       button.disabled = false;
       button.textContent = 'Selecionar plano';
@@ -155,9 +182,27 @@ planList.addEventListener('click', (event) => {
   if(button) iniciarCheckout(button.dataset.plan);
 });
 
+changePlanButton.addEventListener('click', () => {
+  checkoutContainer.replaceChildren();
+  checkoutStep.hidden = true;
+  planList.hidden = false;
+  checkoutCard.classList.add('has-plans');
+  statusElement.textContent = 'Escolha o plano ideal para seus estudos.';
+  planButtons.forEach(button => {
+    button.disabled = false;
+    button.textContent = 'Selecionar plano';
+  });
+});
+
 (async function iniciarPaginaAssinatura(){
   try{
     const ativa = await atualizarStatus();
+    if(requestedPlan &&
+       planButtons.some(button => button.dataset.plan === requestedPlan) &&
+       ativa === false){
+      await iniciarCheckout(requestedPlan);
+      return;
+    }
     if(checkoutReturned && ativa === false){
       for(let tentativa = 0; tentativa < 5; tentativa += 1){
         await new Promise(resolve => setTimeout(resolve, 2000));

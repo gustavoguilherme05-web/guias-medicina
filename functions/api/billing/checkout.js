@@ -53,8 +53,7 @@ export async function onRequestPost({ request, env }) {
 
     const requiredStripeSettings = [
       "STRIPE_SECRET_KEY",
-      "STRIPE_PUBLISHABLE_KEY",
-      "STRIPE_WEBHOOK_SECRET"
+      "STRIPE_PUBLISHABLE_KEY"
     ];
     const missingStripeSettings = requiredStripeSettings.filter(
       (setting) => typeof env[setting] !== "string" || !env[setting].trim()

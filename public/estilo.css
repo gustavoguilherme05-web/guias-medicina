@@ -671,7 +671,7 @@ body.dark .prescricao-result.has-error p{ color:#F09A8B; }
 .checkout-description,.checkout-status{
   color:var(--ink-soft); font-size:.92rem;
 }
-.plan-list[hidden],.checkout-form[hidden],.checkout-error[hidden]{ display:none; }
+.plan-list[hidden],.checkout-step[hidden],.checkout-error[hidden]{ display:none; }
 .checkout-card.has-plans{ max-width:1040px; }
 .plan-list{
   display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px;
@@ -695,6 +695,9 @@ body.dark .prescricao-result.has-error p{ color:#F09A8B; }
 }
 .plan-select{ width:100%; }
 .plan-select:disabled{ cursor:wait; opacity:.7; }
+.checkout-step-heading{ display:flex; align-items:center; justify-content:space-between; gap:18px; margin-top:12px; }
+.checkout-step-heading h2{ margin:0; color:var(--ink); font-size:1.25rem; }
+.checkout-step-heading p{ margin:6px 0 0; color:var(--ink-soft); font-size:.9rem; }
 .checkout-form{ margin-top:24px; }
 .checkout-error{ color:#B4402A; font-size:.88rem; }
 .checkout-back{ display:inline-block; margin-top:20px; color:var(--vital-dark); font-size:.88rem; }
@@ -702,6 +705,9 @@ body.dark .checkout-error{ color:#F09A8B; }
 @media(max-width:850px){
   .plan-list{ grid-template-columns:1fr; max-width:480px; margin-right:auto; margin-left:auto; }
   .plan-badge{ margin-top:-36px; }
+}
+@media(max-width:560px){
+  .checkout-step-heading{ align-items:flex-start; flex-direction:column; }
 }
 
 /* honeypot anti-spam: escondido de humanos, visível para bots */
