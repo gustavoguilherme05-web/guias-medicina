@@ -12,6 +12,16 @@ const SUBSCRIPTION_STATUSES = new Set([
   "paused"
 ]);
 const SIGNATURE_TOLERANCE_SECONDS = 300;
+const PLAN_TIERS = {
+  prescricao_mensal: "prescription_only",
+  pro_mensal: "pro",
+  pro_trimestral: "pro"
+};
+const PLAN_PRICE_SETTINGS = {
+  prescricao_mensal: "STRIPE_PRICE_PRESCRICAO_MENSAL",
+  pro_mensal: "STRIPE_PRICE_PRO_MENSAL",
+  pro_trimestral: "STRIPE_PRICE_PRO_TRIMESTRAL"
+};
 
 function bytesToHex(bytes) {
   return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
@@ -54,6 +64,22 @@ function stripeId(value) {
   return typeof id === "string" && /^[a-zA-Z0-9_]+$/.test(id) ? id : null;
 }
 
+function getSubscriptionPlan(subscription, env) {
+  if (!["active", "trialing"].includes(subscription.status)) return "free";
+
+  const metadataPlan = subscription.metadata?.plan;
+  if (Object.prototype.hasOwnProperty.call(PLAN_TIERS, metadataPlan)) {
+    return PLAN_TIERS[metadataPlan];
+  }
+
+  const priceId = stripeId(subscription.items?.data?.[0]?.price);
+  const matchingPlan = Object.keys(PLAN_PRICE_SETTINGS).find(
+    (plan) => typeof env[PLAN_PRICE_SETTINGS[plan]] === "string" &&
+      env[PLAN_PRICE_SETTINGS[plan]] === priceId
+  );
+  return matchingPlan ? PLAN_TIERS[matchingPlan] : "free";
+}
+
 async function syncSubscription(env, subscriptionId, customerId, email) {
   if (!subscriptionId || !customerId) return;
 
@@ -69,21 +95,23 @@ async function syncSubscription(env, subscriptionId, customerId, email) {
   if (actualCustomerId !== customerId) {
     throw new Error("A assinatura e o cliente do evento Stripe não correspondem.");
   }
+  const plan = getSubscriptionPlan(subscription, env);
 
   if (email) {
     await env.DB.prepare(`
       UPDATE users
-      SET stripe_customer_id = ?, stripe_subscription_id = ?, subscription_status = ?
+      SET stripe_customer_id = ?, stripe_subscription_id = ?,
+          subscription_status = ?, subscription_plan = ?
       WHERE email = ?
-    `).bind(customerId, subscription.id, subscription.status, email).run();
+    `).bind(customerId, subscription.id, subscription.status, plan, email).run();
     return;
   }
 
   await env.DB.prepare(`
     UPDATE users
-    SET stripe_subscription_id = ?, subscription_status = ?
+    SET stripe_subscription_id = ?, subscription_status = ?, subscription_plan = ?
     WHERE stripe_customer_id = ?
-  `).bind(subscription.id, subscription.status, customerId).run();
+  `).bind(subscription.id, subscription.status, plan, customerId).run();
 }
 
 export async function onRequestPost({ request, env }) {

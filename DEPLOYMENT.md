@@ -71,3 +71,11 @@ npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
 ```
 
 O banco D1 remoto já foi reconciliado com o histórico de migrações e recebeu a migração de assinatura. Para uma nova configuração do checkout — chaves, preço, webhook, testes e fluxo — consulte [STRIPE_INTEGRATION_TODO.md](./STRIPE_INTEGRATION_TODO.md), a fonte única para os próximos passos de Stripe.
+
+A migração `0004_osce_trial_sessions.sql` adiciona o plano de acesso sincronizado pelo webhook Stripe e o vínculo temporário necessário para permitir que o teste gratuito do OSCE continue durante uma simulação completa. Aplique-a em cada banco D1 antes de publicar as mudanças:
+
+```powershell
+npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
+```
+
+Após a migração, reenvie os eventos `customer.subscription.updated` das assinaturas já existentes para preencher `subscription_plan`. O webhook usa o metadado do plano ou compara o preço da assinatura com os IDs configurados no ambiente.

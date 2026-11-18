@@ -1,3 +1,9 @@
+import {
+  getAuthenticatedUser,
+  hasDatabase,
+  jsonResponse
+} from "../_shared/auth.js";
+
 const RUBRICAS_POR_CASO = {
   'amigdalite-bacteriana-aguda': {
     caso: 'Faringoamigdalite aguda provável por estreptococo do grupo A em mulher de 19 anos, com febre, exsudato tonsilar e linfonodos cervicais dolorosos. Sem alergias conhecidas.',
@@ -39,15 +45,71 @@ const RUBRICAS_POR_CASO = {
   }
 };
 
+function getSubscriptionPlan(account) {
+  const tierStatuses = new Set(["free", "prescription_only", "pro"]);
+  if (tierStatuses.has(account.subscription_status)) {
+    return account.subscription_status;
+  }
+  if (["active", "trialing"].includes(account.subscription_status) &&
+      tierStatuses.has(account.subscription_plan)) {
+    return account.subscription_plan;
+  }
+  return "free";
+}
+
+function getPlanCondition(account, plan) {
+  if (["free", "prescription_only", "pro"].includes(account.subscription_status)) {
+    return {
+      sql: "subscription_status = ?",
+      value: account.subscription_status
+    };
+  }
+  if (["active", "trialing"].includes(account.subscription_status)) {
+    return {
+      sql: "subscription_status IN ('active', 'trialing') AND subscription_plan = ?",
+      value: plan
+    };
+  }
+  return {
+    sql: "subscription_status = ? AND subscription_plan = 'free'",
+    value: account.subscription_status
+  };
+}
+
 export async function onRequestPost(context) {
+  const { request, env } = context;
+  if (!hasDatabase(env)) {
+    return jsonResponse({ error: "Banco de dados D1 não configurado." }, 503);
+  }
+
+  let user;
+  let account;
+  try {
+    user = await getAuthenticatedUser(request, env);
+    if (!user) {
+      return jsonResponse({ error: "Entre na sua conta para usar o treino de prescrição." }, 401);
+    }
+
+    account = await env.DB.prepare(`
+      SELECT subscription_status, subscription_plan,
+             prescriptions_today_count, last_prescription_date
+      FROM users
+      WHERE email = ?
+    `).bind(user.email).first();
+  } catch (error) {
+    console.error("Falha ao validar acesso ao treino de prescrição:", error);
+    return jsonResponse({ error: "Não foi possível validar seu acesso agora." }, 500);
+  }
+
+  if (!account) {
+    return jsonResponse({ error: "Conta não encontrada." }, 401);
+  }
+
   let body;
   try {
-    body = await context.request.json();
+    body = await request.json();
   } catch {
-    return new Response(JSON.stringify({ error: "Corpo da requisição inválido." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
+    return jsonResponse({ error: "Corpo da requisição inválido." }, 400);
   }
 
   const prescricaoAluno = typeof body?.prescricaoAluno === "string"
@@ -58,26 +120,17 @@ export async function onRequestPost(context) {
     ? RUBRICAS_POR_CASO[casoId]
     : null;
   if (!caso) {
-    return new Response(JSON.stringify({ error: "Selecione um caso clínico válido." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
+    return jsonResponse({ error: "Selecione um caso clínico válido." }, 400);
   }
   if (!prescricaoAluno) {
-    return new Response(JSON.stringify({ error: "Informe a prescrição para análise." }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
-    });
+    return jsonResponse({ error: "Informe a prescrição para análise." }, 400);
   }
 
   const baseUrl = context.env?.BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai/";
   const apiKey = context.env?.API_KEY;
   const model = context.env?.MODEL || "gemini-3.8-flash";
   if (!apiKey) {
-    return new Response(JSON.stringify({ error: "API_KEY não está configurada como segredo no ambiente do Cloudflare Pages." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    return jsonResponse({ error: "API_KEY não está configurada como segredo no ambiente do Cloudflare Pages." }, 500);
   }
 
   const systemPrompt = `
@@ -115,10 +168,54 @@ Analise a prescrição do aluno considerando o caso e as diretrizes acima. Não 
     endpoint = new URL(`${baseUrl.replace(/\/+$/, "")}/chat/completions`);
     if (!["http:", "https:"].includes(endpoint.protocol)) throw new Error("Protocolo inválido.");
   } catch {
-    return new Response(JSON.stringify({ error: "A URL da API de IA não é válida." }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" }
-    });
+    return jsonResponse({ error: "A URL da API de IA não é válida." }, 500);
+  }
+
+  const today = new Date().toISOString().split("T")[0];
+  const plan = getSubscriptionPlan(account);
+  const isFree = plan === "free";
+  if (!isFree && plan !== "prescription_only" && plan !== "pro") {
+    return jsonResponse({
+      requiresUpgrade: true,
+      message: "Limite diário atingido. Assine um plano para uso ilimitado."
+    }, 403);
+  }
+  if (isFree &&
+      account.last_prescription_date === today &&
+      account.prescriptions_today_count >= 1) {
+    return jsonResponse({
+      requiresUpgrade: true,
+      message: "Limite diário atingido. Assine um plano para uso ilimitado."
+    }, 403);
+  }
+
+  const planCondition = getPlanCondition(account, plan);
+
+  try {
+    const update = await env.DB.prepare(`
+      UPDATE users
+      SET prescriptions_today_count = CASE
+            WHEN last_prescription_date = ? THEN prescriptions_today_count + 1
+            ELSE 1
+          END,
+          last_prescription_date = ?
+      WHERE email = ?
+        AND (${planCondition.sql})
+        AND (
+          ? != 'free' OR
+          (CASE WHEN last_prescription_date = ? THEN prescriptions_today_count ELSE 0 END) < 1
+        )
+    `).bind(today, today, user.email, planCondition.value, plan, today).run();
+
+    if (update.meta?.changes !== 1) {
+      return jsonResponse({
+        requiresUpgrade: true,
+        message: "Limite diário atingido. Assine um plano para uso ilimitado."
+      }, 403);
+    }
+  } catch (error) {
+    console.error("Falha ao atualizar o limite diário de prescrição:", error);
+    return jsonResponse({ error: "Não foi possível registrar seu uso agora." }, 500);
   }
 
   let response;

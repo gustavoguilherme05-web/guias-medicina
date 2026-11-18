@@ -12,7 +12,9 @@ const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
   "past_due",
   "incomplete",
   "paused",
-  "unpaid"
+  "unpaid",
+  "prescription_only",
+  "pro"
 ]);
 
 const PLAN_PRICE_SETTINGS = {

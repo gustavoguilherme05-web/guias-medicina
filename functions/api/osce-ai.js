@@ -1,3 +1,10 @@
+import {
+  getAuthenticatedUser,
+  hasDatabase,
+  hashText,
+  jsonResponse
+} from "../_shared/auth.js";
+
 const OSCE_CHECKLIST = [
   { id: "symptoms", label: "Investigou sintomas e início do quadro" },
   { id: "allergies", label: "Perguntou sobre alergias" },
@@ -7,6 +14,42 @@ const OSCE_CHECKLIST = [
 
 const DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 const DEFAULT_MODEL = "gemini-3.8-flash";
+const OSCE_TRIAL_SESSION_TTL_MS = 15 * 60 * 1000;
+const OSCE_UPGRADE_REQUIRED = {
+  requiresUpgrade: true,
+  message: "Teste do OSCE esgotado. Assine o plano PRO para uso ilimitado."
+};
+
+function getSubscriptionPlan(account) {
+  const tierStatuses = new Set(["free", "prescription_only", "pro"]);
+  if (tierStatuses.has(account.subscription_status)) {
+    return account.subscription_status;
+  }
+  if (["active", "trialing"].includes(account.subscription_status) &&
+      tierStatuses.has(account.subscription_plan)) {
+    return account.subscription_plan;
+  }
+  return "free";
+}
+
+function getPlanCondition(account, plan) {
+  if (["free", "prescription_only", "pro"].includes(account.subscription_status)) {
+    return {
+      sql: "subscription_status = ?",
+      value: account.subscription_status
+    };
+  }
+  if (["active", "trialing"].includes(account.subscription_status)) {
+    return {
+      sql: "subscription_status IN ('active', 'trialing') AND subscription_plan = ?",
+      value: plan
+    };
+  }
+  return {
+    sql: "subscription_status = ? AND subscription_plan = 'free'",
+    value: account.subscription_status
+  };
+}
 
 const PATIENT_PROMPT = `Você é João Martins, paciente fictício de 65 anos atendido em uma UPA. Responda sempre em português brasileiro, em primeira pessoa, de maneira coloquial, breve e natural.
 
@@ -38,17 +81,38 @@ Retorne somente um objeto JSON válido, sem Markdown, saudações ou texto fora 
 
 Substitua os valores pelos resultados da avaliação. A nota deve ser um número entre 0 e 10, igual a 2,5 pontos por item concluído. Escreva um comentário respeitoso, destacando acertos e próximos passos. Não inclua diagnóstico novo ou recomendação para um paciente real.`;
 
-function jsonResponse(body, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: { "Content-Type": "application/json; charset=utf-8" }
-  });
-}
-
 export async function onRequestPost(context) {
+  const { request, env } = context;
+  if (!hasDatabase(env)) {
+    return jsonResponse({ error: "Banco de dados D1 não configurado." }, 503);
+  }
+
+  let user;
+  let account;
+  try {
+    user = await getAuthenticatedUser(request, env);
+    if (!user) {
+      return jsonResponse({ error: "Entre na sua conta para usar o simulador OSCE." }, 401);
+    }
+
+    account = await env.DB.prepare(`
+      SELECT subscription_status, subscription_plan, osce_trial_used,
+             osce_trial_session_hash, osce_trial_session_expires_at
+      FROM users
+      WHERE email = ?
+    `).bind(user.email).first();
+  } catch (error) {
+    console.error("Falha ao validar acesso ao simulador OSCE:", error);
+    return jsonResponse({ error: "Não foi possível validar seu acesso agora." }, 500);
+  }
+
+  if (!account) {
+    return jsonResponse({ error: "Conta não encontrada." }, 401);
+  }
+
   let body;
   try {
-    body = await context.request.json();
+    body = await request.json();
   } catch {
     return jsonResponse({ error: "Corpo da requisição inválido." }, 400);
   }
@@ -58,6 +122,13 @@ export async function onRequestPost(context) {
   }
   if (!Array.isArray(body.messages) || body.messages.length > 100) {
     return jsonResponse({ error: "Histórico de conversa inválido." }, 400);
+  }
+
+  const plan = getSubscriptionPlan(account);
+  const isPro = plan === "pro";
+  const needsTrial = plan === "free" || plan === "prescription_only";
+  if (!isPro && !needsTrial) {
+    return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
   }
 
   const messages = [];
@@ -91,6 +162,60 @@ export async function onRequestPost(context) {
     if (!["http:", "https:"].includes(endpoint.protocol)) throw new Error("Protocolo inválido.");
   } catch {
     return jsonResponse({ error: "A URL da API de IA não é válida." }, 500);
+  }
+
+  if (needsTrial) {
+    const trialSessionToken = body.trialSessionToken;
+    if (typeof trialSessionToken !== "string" || !/^[a-f0-9]{64}$/.test(trialSessionToken)) {
+      return jsonResponse({ error: "Sessão OSCE inválida. Reinicie a simulação." }, 400);
+    }
+
+    try {
+      const sessionHash = await hashText(trialSessionToken);
+      const now = Date.now();
+      const sessionIsActive = account.osce_trial_session_hash === sessionHash &&
+        Number(account.osce_trial_session_expires_at) > now;
+
+      if (account.osce_trial_used === 1) {
+        if (!sessionIsActive) {
+          return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
+        }
+      } else {
+        const planCondition = getPlanCondition(account, plan);
+        const reservation = await env.DB.prepare(`
+          UPDATE users
+          SET osce_trial_used = 1,
+              osce_trial_session_hash = ?,
+              osce_trial_session_expires_at = ?
+          WHERE email = ?
+            AND (${planCondition.sql})
+            AND osce_trial_used = 0
+        `).bind(
+          sessionHash,
+          now + OSCE_TRIAL_SESSION_TTL_MS,
+          user.email,
+          planCondition.value
+        ).run();
+
+        if (reservation.meta?.changes !== 1) {
+          const currentAccount = await env.DB.prepare(`
+            SELECT subscription_status, subscription_plan, osce_trial_used,
+                   osce_trial_session_hash, osce_trial_session_expires_at
+            FROM users
+            WHERE email = ?
+          `).bind(user.email).first();
+          const concurrentSameSession = (currentAccount && getSubscriptionPlan(currentAccount) === "pro") ||
+            (currentAccount?.osce_trial_session_hash === sessionHash &&
+             Number(currentAccount.osce_trial_session_expires_at) > Date.now());
+          if (!concurrentSameSession) {
+            return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Falha ao reservar o teste gratuito do OSCE:", error);
+      return jsonResponse({ error: "Não foi possível registrar seu teste OSCE agora." }, 500);
+    }
   }
 
   let response;

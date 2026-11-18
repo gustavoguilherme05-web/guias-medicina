@@ -226,7 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!response.ok) {
-        throw new Error(data?.error || 'Não foi possível analisar a prescrição. Tente novamente.');
+        throw new Error(data?.error || data?.message || 'Não foi possível analisar a prescrição. Tente novamente.');
       }
       if (typeof data?.analise !== 'string' || !data.analise.trim()) {
         throw new Error('A API não retornou uma análise válida. Tente novamente.');

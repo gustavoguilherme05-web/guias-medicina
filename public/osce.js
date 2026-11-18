@@ -19,6 +19,7 @@
   let timerInterval = null;
   let sessionEnded = false;
   let waitingForPatient = false;
+  let trialSessionToken = null;
   const findings = { vitals: false, ecg: false, chestXray: false };
 
   const vitalSigns = [
@@ -199,7 +200,7 @@
     const response = await fetch('/api/osce-ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, messages })
+      body: JSON.stringify({ mode, messages, trialSessionToken })
     });
     let data;
     try {
@@ -207,7 +208,7 @@
     } catch {
       throw new Error('O serviço de IA retornou uma resposta inválida.');
     }
-    if (!response.ok) throw new Error(data.error || 'Não foi possível obter uma resposta da IA.');
+    if (!response.ok) throw new Error(data.error || data.message || 'Não foi possível obter uma resposta da IA.');
     if (typeof data.content !== 'string' || !data.content.trim()) {
       throw new Error('A IA retornou uma resposta vazia.');
     }
@@ -345,6 +346,9 @@
   document.getElementById('startButton').addEventListener('click', async () => {
     sessionEnded = false;
     waitingForPatient = false;
+    const tokenBytes = new Uint8Array(32);
+    crypto.getRandomValues(tokenBytes);
+    trialSessionToken = Array.from(tokenBytes, byte => byte.toString(16).padStart(2, '0')).join('');
     transcript.length = 0;
     messageList.replaceChildren();
     chatInput.value = '';

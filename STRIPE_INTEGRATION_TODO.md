@@ -56,7 +56,7 @@ Não é necessário instalar `stripe-node`: as Cloudflare Pages Functions chamam
 - `public/assinatura.html` carrega Stripe.js Dahlia e contém o ponto de montagem do formulário.
 - `public/assinatura.js` envia a chave do plano selecionado para `/api/billing/checkout`, monta `initCheckoutFormSdk` e confirma o pagamento.
 - `functions/api/billing/checkout.js` valida a chave do plano e seleciona o ID de preço configurado no servidor antes de criar a sessão.
-- `functions/api/webhook.js` valida a assinatura do webhook e sincroniza o status da assinatura com a conta cujo e-mail foi coletado no Checkout. O e-mail informado no Checkout precisa ser o mesmo usado na conta PAD.
+- `functions/api/webhook.js` valida a assinatura do webhook e sincroniza o status da cobrança e o plano de acesso (`subscription_plan`) com a conta cujo e-mail foi coletado no Checkout. O e-mail informado no Checkout precisa ser o mesmo usado na conta PAD.
 - `functions/_shared/stripe.js` chama a API Stripe com autenticação do lado do servidor e a versão Dahlia.
 
 O backend registra o status da assinatura no D1 e o checkout já permite selecionar os três preços. A aplicação ainda não aplica permissões por plano nas ferramentas; antes de considerar os benefícios como provisionados, implemente a validação de acesso correspondente no servidor.
