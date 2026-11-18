@@ -23,6 +23,14 @@ function mostrarErro(mensagem){
   errorElement.hidden = false;
 }
 
+async function lerRespostaJson(response, acao){
+  try{
+    return await response.json();
+  }catch{
+    throw new Error(`${acao}: o servidor retornou uma resposta inválida (HTTP ${response.status}). Atualize a página e tente novamente.`);
+  }
+}
+
 function aguardarComLimite(promise, duracao, mensagem){
   return new Promise((resolve, reject) => {
     const timeoutId = window.setTimeout(() => reject(new Error(mensagem)), duracao);
@@ -47,7 +55,7 @@ async function consultarAssinatura(){
       credentials: 'same-origin',
       signal: controller.signal
     });
-    const data = await response.json();
+    const data = await lerRespostaJson(response, 'Não foi possível consultar sua assinatura');
     if(response.status === 401){
       return { status: 'unauthenticated', canStartCheckout: true };
     }
@@ -138,7 +146,7 @@ async function iniciarCheckout(plan){
         body: JSON.stringify({ plan }),
         signal: controller.signal
       });
-      data = await response.json();
+      data = await lerRespostaJson(response, 'Não foi possível iniciar o checkout');
     }finally{
       window.clearTimeout(timeoutId);
     }
@@ -265,7 +273,7 @@ cpfForm.addEventListener('submit', async (event) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ cpf: cpfInput.value })
     });
-    const data = await response.json();
+    const data = await lerRespostaJson(response, 'Não foi possível salvar seu CPF');
     if(!response.ok) throw new Error(data?.error || 'Não foi possível salvar seu CPF.');
     cpfStep.hidden = true;
     await atualizarStatus();
@@ -309,6 +317,7 @@ changePlanButton.addEventListener('click', () => {
     }
   }catch(error){
     statusElement.textContent = 'Não foi possível confirmar sua assinatura. Os planos continuam disponíveis abaixo.';
+    mostrarErro(error.message || 'Tente novamente em instantes.');
     planList.hidden = false;
     checkoutCard.classList.add('has-plans');
   }
