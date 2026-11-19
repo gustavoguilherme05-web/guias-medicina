@@ -12,8 +12,8 @@ const selectedPlanSummary = document.getElementById('selectedPlanSummary');
 const changePlanButton = document.getElementById('changePlan');
 const requestedPlan = new URLSearchParams(window.location.search).get('plan');
 const planLabels = {
-  prescricao_mensal: 'Treino de Prescrição — R$ 19,90/mês',
-  pro_mensal: 'Pega Diretriz PRO — R$ 29,90/mês',
+  prescricao_mensal: 'Pega a Diretriz LITE — R$ 19,90/mês',
+  pro_mensal: 'Pega a Diretriz PRO — R$ 29,90/mês',
   experience: 'EXPERIÊNCIA — R$ 14,90 por 7 dias (pagamento único)'
 };
 const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
