@@ -102,12 +102,12 @@ export async function onRequestPost({ request, env }) {
     form.set("automatic_tax[enabled]", "false");
     form.set("name_collection[individual][enabled]", "true");
     form.set("name_collection[individual][optional]", "true");
-    form.set("payment_method_collection", "always");
     form.set("submit_type", "auto");
     form.set("integration_identifier", "custom_embedded_web_0001");
     if (isExperience) {
       form.set("payment_intent_data[metadata][plan]", body.plan);
     } else {
+      form.set("payment_method_collection", "always");
       form.set("subscription_data[metadata][plan]", body.plan);
       form.set("saved_payment_method_options[payment_method_save]", "enabled");
     }

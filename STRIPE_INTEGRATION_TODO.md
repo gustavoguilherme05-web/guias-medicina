@@ -35,7 +35,7 @@ Estes valores do Checkout Studio já estão configurados no endpoint:
 | `billing_address_collection` | `auto` |
 | `phone_number_collection.enabled` | `false` |
 | `automatic_tax.enabled` | `false` |
-| `payment_method_collection` | `always` |
+| `payment_method_collection` | `always` somente para planos mensais recorrentes |
 | `submit_type` | `auto` |
 | `name_collection.individual.enabled` | `true` |
 | `name_collection.individual.optional` | `true` |
