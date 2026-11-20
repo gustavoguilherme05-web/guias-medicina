@@ -1,4 +1,4 @@
-const CASOS_CLINICOS = [
+const CASOS_LEGACY = [
   {
     id: 'amigdalite-bacteriana-aguda',
     titulo: 'Amigdalite bacteriana aguda',
@@ -137,71 +137,119 @@ const CASOS_CLINICOS = [
     ]
   }
 ];
+const CASOS_CLINICOS = [...window.PRESCRIPTION_CASES, ...CASOS_LEGACY];
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.getElementById('prescricaoForm');
   if (!form) return;
 
-  const caseSelect = document.getElementById('casoSelecionado');
-  const caseDetails = document.getElementById('casoClinicoDetalhes');
+  const listView = document.getElementById('listaCasosView');
+  const resolutionView = document.getElementById('resolucaoCasoView');
+  const caseList = document.getElementById('casosClinicosLista');
+  const caseDetails = document.getElementById('casoClinicoCompleto');
   const submitButton = document.getElementById('analisarPrescricao');
   const result = document.getElementById('prescricaoResult');
   const status = document.getElementById('prescricaoStatus');
   const analysis = document.getElementById('prescricaoAnalysis');
   const upgrade = document.getElementById('prescricaoUpgrade');
 
-  CASOS_CLINICOS.forEach((caso) => {
-    const option = document.createElement('option');
-    option.value = caso.id;
-    option.textContent = caso.titulo;
-    caseSelect.appendChild(option);
-  });
-
-  function renderizarCaso(caso) {
-    caseDetails.replaceChildren();
-    caso.secoes.forEach((secao) => {
-      const bloco = document.createElement('section');
-      const titulo = document.createElement('h3');
-      titulo.textContent = secao.titulo;
-      bloco.appendChild(titulo);
-
-      if (secao.texto) {
-        const texto = document.createElement('p');
-        texto.textContent = secao.texto;
-        bloco.appendChild(texto);
-      }
-
-      if (secao.itens) {
-        const lista = document.createElement('ul');
-        secao.itens.forEach((item) => {
-          const linha = document.createElement('li');
-          linha.textContent = item;
-          lista.appendChild(linha);
-        });
-        bloco.appendChild(lista);
-      }
-
-      caseDetails.appendChild(bloco);
-    });
+  function getContexto(caso) {
+    const secao = caso.secoes.find((item) => item.titulo.toLowerCase() === 'contexto');
+    return secao?.texto || caso.contexto || 'Atendimento ambulatorial';
   }
 
-  function obterCasoSelecionado() {
-    return CASOS_CLINICOS.find((caso) => caso.id === caseSelect.value);
+  function getHistoria(caso) {
+    const historia = caso.secoes.find((item) => item.titulo.toLowerCase() === 'história') ||
+      caso.secoes.find((item) => item.titulo.toLowerCase().startsWith('história')) ||
+      caso.secoes.find((item) => item.titulo.toLowerCase().includes('história')) ||
+      caso.secoes.find((item) => item.titulo.toLowerCase().includes('identificação'));
+    return historia?.texto || historia?.itens?.join(' ') || '';
   }
 
-  caseSelect.addEventListener('change', () => {
-    const caso = obterCasoSelecionado();
-    if (caso) renderizarCaso(caso);
-    result.hidden = true;
-  });
-  renderizarCaso(obterCasoSelecionado());
+  function renderizarPrevia(caso) {
+    const card = document.createElement('a');
+    card.className = 'caso-preview-card';
+    card.href = `prescricao.html?caso=${encodeURIComponent(caso.id)}`;
+
+    const contexto = document.createElement('span');
+    contexto.className = 'caso-preview-contexto';
+    contexto.textContent = getContexto(caso);
+    const titulo = document.createElement('span');
+    titulo.className = 'caso-preview-titulo';
+    titulo.textContent = caso.titulo;
+    const historia = document.createElement('span');
+    historia.className = 'caso-preview-historia';
+    historia.textContent = getHistoria(caso);
+    const acao = document.createElement('span');
+    acao.className = 'caso-preview-acao';
+    acao.textContent = 'Resolver Caso';
+
+    card.append(contexto, titulo, historia, acao);
+    caseList.appendChild(card);
+  }
+
+  function renderizarCasoCompleto(caso) {
+    const article = document.createElement('article');
+    article.className = 'caso-completo';
+    const header = document.createElement('header');
+    const contexto = document.createElement('span');
+    contexto.className = 'caso-completo-contexto';
+    contexto.textContent = getContexto(caso);
+    const titulo = document.createElement('h2');
+    titulo.textContent = caso.titulo;
+    header.append(contexto, titulo);
+    article.appendChild(header);
+
+    caso.secoes
+      .filter((secao) => secao.titulo.toLowerCase() !== 'contexto')
+      .forEach((secao) => {
+        const bloco = document.createElement('section');
+        bloco.className = 'caso-completo-secao';
+        const subtitulo = document.createElement('h3');
+        subtitulo.textContent = secao.titulo;
+        bloco.appendChild(subtitulo);
+
+        if (secao.texto) {
+          const texto = document.createElement('p');
+          texto.textContent = secao.texto;
+          bloco.appendChild(texto);
+        }
+
+        if (secao.itens) {
+          const lista = document.createElement('ul');
+          secao.itens.forEach((item) => {
+            const linha = document.createElement('li');
+            linha.textContent = item;
+            lista.appendChild(linha);
+          });
+          bloco.appendChild(lista);
+        }
+
+        article.appendChild(bloco);
+      });
+
+    caseDetails.replaceChildren(article);
+  }
+
+  CASOS_CLINICOS.forEach(renderizarPrevia);
+
+  const requestedCaseId = new URLSearchParams(window.location.search).get('caso');
+  if (!requestedCaseId) return;
+
+  listView.hidden = true;
+  resolutionView.hidden = false;
+  const casoSelecionado = CASOS_CLINICOS.find((caso) => caso.id === requestedCaseId);
+  if (!casoSelecionado) {
+    caseDetails.textContent = 'Caso não encontrado. Volte para a lista e escolha outro caso.';
+    form.hidden = true;
+    return;
+  }
+
+  renderizarCasoCompleto(casoSelecionado);
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (!form.reportValidity()) return;
-
-    const caso = obterCasoSelecionado();
-    if (!caso) return;
 
     submitButton.disabled = true;
     submitButton.textContent = 'Analisando...';
@@ -217,7 +265,7 @@ document.addEventListener('DOMContentLoaded', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          casoId: caso.id,
+          casoId: casoSelecionado.id,
           prescricaoAluno: form.elements.prescricaoAluno.value.trim()
         })
       });

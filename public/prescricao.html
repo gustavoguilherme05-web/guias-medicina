@@ -34,38 +34,42 @@
   <header class="prescricao-heading">
     <span class="hero-eyebrow">Prática educacional</span>
     <h1>Treino de prescrição</h1>
-    <p>Analise o caso clínico e escreva sua prescrição. A IA vai fornecer um feedback para apoiar seus estudos.</p>
+    <p>Escolha um caso clínico para praticar sua prescrição e receber feedback educacional.</p>
   </header>
 
-  <form class="prescricao-form" id="prescricaoForm">
-    <section class="prescricao-card">
-      <label for="casoSelecionado">Escolha um caso clínico</label>
-      <p class="prescricao-hint">Leia o caso selecionado e elabore a prescrição correspondente.</p>
-      <select id="casoSelecionado" name="casoSelecionado" required></select>
-      <div class="caso-clinico-detalhes" id="casoClinicoDetalhes" aria-live="polite"></div>
+  <section id="listaCasosView" aria-labelledby="casosClinicosTitulo">
+    <h2 class="prescricao-section-title" id="casosClinicosTitulo">Casos clínicos disponíveis</h2>
+    <p class="prescricao-hint">Leia o resumo e abra um caso para resolver em uma tela dedicada.</p>
+    <div class="casos-preview-grid" id="casosClinicosLista"></div>
+  </section>
+
+  <section id="resolucaoCasoView" hidden>
+    <a href="prescricao.html" class="voltar-link">← Voltar para a lista de casos</a>
+    <div id="casoClinicoCompleto"></div>
+
+    <form class="prescricao-form" id="prescricaoForm">
+      <section class="prescricao-card">
+        <label for="prescricaoAluno">Sua prescrição</label>
+        <p class="prescricao-hint">Inclua os itens necessários para a conduta proposta, como medicamento, dose, via e frequência.</p>
+        <textarea id="prescricaoAluno" name="prescricaoAluno" rows="10" required
+          placeholder="Escreva sua prescrição aqui..."></textarea>
+      </section>
+
+      <div class="prescricao-actions">
+        <p class="prescricao-disclaimer">Exercício de estudo: o feedback da IA pode conter erros e não substitui protocolos institucionais nem a supervisão de um profissional responsável.</p>
+        <button class="btn btn-primary" type="submit" id="analisarPrescricao">Analisar prescrição</button>
+      </div>
+    </form>
+
+    <section class="prescricao-result" id="prescricaoResult" aria-live="polite" hidden>
+      <h2>Feedback da análise</h2>
+      <p id="prescricaoStatus" role="status"></p>
+      <div class="prescricao-analysis" id="prescricaoAnalysis"></div>
+      <p id="prescricaoUpgrade" class="prescricao-upgrade" hidden>
+        <span>Desbloqueie o uso ilimitado da prescrição e conheça os outros planos.</span>
+        <a class="btn btn-primary" href="assinatura.html">Conhecer planos</a>
+      </p>
     </section>
-
-    <section class="prescricao-card">
-      <label for="prescricaoAluno">Sua prescrição</label>
-      <p class="prescricao-hint">Inclua os itens necessários para a conduta proposta, como medicamento, dose, via e frequência.</p>
-      <textarea id="prescricaoAluno" name="prescricaoAluno" rows="10" required
-        placeholder="Escreva sua prescrição aqui..."></textarea>
-    </section>
-
-    <div class="prescricao-actions">
-      <p class="prescricao-disclaimer">Exercício de estudo: o feedback da IA pode conter erros e não substitui protocolos institucionais nem a supervisão de um profissional responsável.</p>
-      <button class="btn btn-primary" type="submit" id="analisarPrescricao">Analisar prescrição</button>
-    </div>
-  </form>
-
-  <section class="prescricao-result" id="prescricaoResult" aria-live="polite" hidden>
-    <h2>Feedback da análise</h2>
-    <p id="prescricaoStatus" role="status"></p>
-    <div class="prescricao-analysis" id="prescricaoAnalysis"></div>
-    <p id="prescricaoUpgrade" class="prescricao-upgrade" hidden>
-      <span>Desbloqueie o uso ilimitado da prescrição e conheça os outros planos.</span>
-      <a class="btn btn-primary" href="assinatura.html">Conhecer planos</a>
-    </p>
   </section>
 </main>
 
@@ -82,6 +86,7 @@
 <button class="back-to-top" id="backToTop" aria-label="Voltar ao topo">↑</button>
 
 <script src="auth.js"></script>
+<script src="casos-prescricao.js"></script>
 <script src="script.js"></script>
 <script src="prescricao-ui.js"></script>
 </body>

@@ -241,6 +241,24 @@ async function exibirArtigo(){
       <div class="artigo-corpo">${artigo.conteudo}</div>
     `;
 
+    const casoPrescricao = window.PRESCRIPTION_CASES?.find(
+      (caso) => caso.guiaId === artigo.id
+    );
+    if (casoPrescricao) {
+      const chamada = document.createElement('section');
+      chamada.className = 'artigo-prescricao-cta';
+      const titulo = document.createElement('h2');
+      titulo.textContent = 'Treine a prescrição deste guia';
+      const texto = document.createElement('p');
+      texto.textContent = 'Aplique o conteúdo deste guia em um caso clínico de prescrição.';
+      const link = document.createElement('a');
+      link.className = 'btn btn-primary';
+      link.href = `prescricao.html?caso=${encodeURIComponent(casoPrescricao.id)}`;
+      link.textContent = `Abrir caso: ${casoPrescricao.titulo}`;
+      chamada.append(titulo, texto, link);
+      container.querySelector('.artigo-corpo').appendChild(chamada);
+    }
+
     document.getElementById('favBtnArtigo').addEventListener('click', (e) => {
       const sessaoAtual = (typeof getSessaoAtiva === 'function') ? getSessaoAtiva() : null;
       if(!sessaoAtual){

@@ -329,6 +329,20 @@ button{ font-family: inherit; cursor:pointer; }
 .artigo-corpo{ font-size:1.08rem; line-height:1.8; }
 .artigo-corpo p{ margin: 0 0 20px; }
 .artigo-corpo strong{ color: var(--vital-dark); }
+.artigo-prescricao-cta{
+  margin-top:36px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-left:4px solid var(--vital);
+  border-radius:var(--radius);
+  background:var(--surface);
+}
+.artigo-prescricao-cta h2{
+  font-family:var(--font-display);
+  font-size:1.25rem;
+  margin:0 0 8px;
+}
+.artigo-prescricao-cta p{ color:var(--ink-soft); }
 .ad-placeholder{
   background: #ECEFEE; border:1px dashed var(--line); border-radius: 8px;
   text-align:center; color: var(--ink-soft); font-family: var(--font-mono);
@@ -520,45 +534,111 @@ body.dark{
   box-shadow:var(--shadow);
   padding:24px;
 }
-.prescricao-card label, .prescricao-result h2{
+.prescricao-card > label, .prescricao-result h2, .prescricao-section-title{
   display:block;
   font-family:var(--font-display);
   font-size:1.3rem;
   font-weight:700;
   margin:0 0 6px;
 }
-.prescricao-card select{
-  display:block;
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:8px;
-  padding:12px;
-  background:var(--bg);
-  color:var(--ink);
-  font:inherit;
-  margin-bottom:18px;
-}
-.prescricao-card select:focus{
-  outline:2px solid var(--vital);
-  outline-offset:1px;
-}
 .prescricao-hint{ color:var(--ink-soft); font-size:.9rem; margin:0 0 12px; }
-.caso-clinico-detalhes{
+.casos-preview-grid{
   display:grid;
-  gap:14px;
+  grid-template-columns:repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+  gap:16px;
+}
+.caso-preview-card{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:10px;
+  padding:20px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--surface);
+  color:var(--ink);
+  cursor:pointer;
+  text-decoration:none;
+  transition:border-color var(--ease), box-shadow var(--ease), transform var(--ease);
+}
+.caso-preview-card:hover,
+.caso-preview-card:focus-visible{
+  border-color:var(--vital);
+  box-shadow:0 0 0 3px rgba(31,122,103,.12);
+  transform:translateY(-2px);
+}
+.caso-preview-contexto{
+  color:var(--vital-dark);
+  font-size:.78rem;
+  font-weight:700;
+}
+.caso-preview-titulo{
+  display:block;
+  font-family:var(--font-display);
+  font-size:1.16rem;
+  font-weight:700;
+}
+.caso-preview-historia{
+  display:block;
+  min-width:0;
+  color:var(--ink-soft);
+  line-height:1.55;
+  overflow-wrap:anywhere;
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  overflow:hidden;
+}
+.caso-preview-acao{
+  display:inline-flex;
+  align-items:center;
+  margin-top:auto;
+  padding:8px 13px;
+  border-radius:8px;
+  background:var(--vital);
+  color:#fff;
+  font-size:.88rem;
+  font-weight:600;
+}
+.caso-completo{
+  margin-bottom:20px;
+  padding:24px;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  background:var(--surface);
+  box-shadow:var(--shadow);
+  overflow-wrap:anywhere;
+}
+.caso-completo-contexto{
+  display:block;
+  margin-bottom:8px;
+  color:var(--vital-dark);
+  font-size:.82rem;
+  font-weight:700;
+}
+.caso-completo h2{
+  font-family:var(--font-display);
+  font-size:clamp(1.35rem, 3vw, 1.8rem);
+  margin:0 0 18px;
+}
+.caso-completo-secao{
   border-top:1px solid var(--line);
-  padding-top:18px;
+  padding-top:16px;
+  margin-top:16px;
 }
-.caso-clinico-detalhes h3{
+.caso-completo-secao h3{
   font-size:1rem;
-  margin:0 0 5px;
+  margin:0 0 6px;
 }
-.caso-clinico-detalhes p, .caso-clinico-detalhes ul{
+.caso-completo-secao p,
+.caso-completo-secao ul{
   color:var(--ink-soft);
   line-height:1.6;
   margin:0;
 }
-.caso-clinico-detalhes ul{ padding-left:20px; }
+.caso-completo-secao ul{ padding-left:20px; }
 .prescricao-card textarea{
   display:block;
   width:100%;
