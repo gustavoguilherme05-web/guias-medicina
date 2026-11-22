@@ -15,7 +15,7 @@
 <title>Meu perfil — PAD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="estilo.css?v=subscription-management-20261122">
 </head>
 <body>
 
@@ -106,6 +106,12 @@
         </div>
       </div>
 
+      <section class="perfil-section perfil-assinatura" aria-labelledby="perfilAssinaturaTitulo">
+        <h2 id="perfilAssinaturaTitulo">Sua assinatura</h2>
+        <p id="perfilAssinaturaStatus" role="status">Consultando seu plano...</p>
+        <a id="perfilAssinaturaLink" class="btn btn-primary" href="assinatura.html">Ver assinatura e opções de plano</a>
+      </section>
+
       <div class="perfil-section">
         <h2>Seus favoritos</h2>
         ${artigosFavoritos.length
@@ -118,6 +124,40 @@
           : `<div class="perfil-vazio">Nenhum guia lido ainda. Assim que você abrir um guia, ele aparece aqui.</div>`}
       </div>
     `;
+
+    const subscriptionStatus = document.getElementById('perfilAssinaturaStatus');
+    const subscriptionLink = document.getElementById('perfilAssinaturaLink');
+    try{
+      const response = await fetch('/api/billing/status', { credentials: 'same-origin' });
+      const data = await response.json();
+      if(!response.ok) throw new Error(data?.error || 'Não foi possível consultar seu plano.');
+
+      const planNames = {
+        free: 'Gratuito',
+        experience: 'EXPERIÊNCIA',
+        prescription_only: 'Pega a Diretriz LITE',
+        pro: 'Pega a Diretriz PRO'
+      };
+      const planName = planNames[data.currentPlan] || planNames.free;
+      const statusNames = {
+        active: 'Ativo',
+        trialing: 'Em avaliação',
+        past_due: 'Pagamento pendente',
+        incomplete: 'Pagamento pendente',
+        unpaid: 'Pagamento pendente',
+        canceled: 'Cancelado',
+        free: 'Sem assinatura ativa'
+      };
+      const details = data.experienceExpiresAt
+        ? `Acesso até ${new Date(data.experienceExpiresAt).toLocaleString('pt-BR')}.`
+        : (statusNames[data.status] || 'Consulte os detalhes da assinatura.');
+      subscriptionStatus.textContent = `Plano atual: ${planName}. ${details}`;
+      if(data.canUpgradeToPro){
+        subscriptionLink.textContent = 'Fazer upgrade para PRO';
+      }
+    }catch(error){
+      subscriptionStatus.textContent = error.message || 'Não foi possível consultar seu plano.';
+    }
   })();
 </script>
 </body>

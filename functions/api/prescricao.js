@@ -276,19 +276,8 @@ export async function onRequestPost(context) {
   }
 
   const systemPrompt = `
-Você é um preceptor médico sênior avaliando a prescrição de um interno de medicina.
-
-CASO CLÍNICO:
-${caso.caso}
-
-PRESCRIÇÃO DO ALUNO:
-${prescricaoAluno}
-
-DIRETRIZES DE REFERÊNCIA:
-${caso.diretriz}
-
-SUA TAREFA:
-Analise a prescrição do aluno considerando o caso e as diretrizes acima. Não invente dados ausentes; quando dose ou conduta depender de peso, gestação, função renal/hepática, alergias ou outro dado não fornecido, indique o que precisa ser avaliado antes de prescrever. Sinalize contraindicações e ressalte que a decisão deve seguir protocolos locais e supervisão clínica. Este é um exercício educacional, não uma prescrição para paciente real. Responda exatamente nesta estrutura em Markdown:
+Você é um preceptor médico sênior avaliando, para fins educacionais, a prescrição de um interno de medicina.
+Analise a prescrição considerando o caso e as diretrizes fornecidas. Não invente dados ausentes; quando dose ou conduta depender de peso, gestação, função renal/hepática, alergias ou outro dado não fornecido, indique o que precisa ser avaliado antes de prescrever. Sinalize contraindicações e ressalte que a decisão deve seguir protocolos locais e supervisão clínica. Isto é um exercício educacional, não uma prescrição para paciente real. Responda exatamente nesta estrutura em Markdown:
 
 ### 1. Classificação Geral
 [Adequada | Parcialmente Adequada | Incorreta]
@@ -304,6 +293,14 @@ Analise a prescrição do aluno considerando o caso e as diretrizes acima. Não 
 ### 4. Prescrição Modelo Recomendada
 [Apresente uma sugestão educacional de prescrição baseada nas diretrizes, incluindo medidas não farmacológicas e ressalvas relevantes.]
 `;
+  const userPrompt = `CASO CLÍNICO:
+${caso.caso}
+
+PRESCRIÇÃO DO ALUNO:
+${prescricaoAluno}
+
+DIRETRIZES DE REFERÊNCIA:
+${caso.diretriz}`;
 
   let endpoint;
   try {
@@ -370,43 +367,36 @@ Analise a prescrição do aluno considerando o caso e as diretrizes acima. Não 
       },
       body: JSON.stringify({
         model,
-        messages: [{ role: "system", content: systemPrompt }],
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt }
+        ],
         temperature: 0.1
       })
     });
-  } catch {
-    return new Response(JSON.stringify({ error: "Não foi possível conectar à API de IA." }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" }
-    });
+  } catch (error) {
+    console.error("Falha ao conectar à API de IA para análise da prescrição:", error);
+    return jsonResponse({ error: "Não foi possível conectar à API de IA." }, 502);
   }
 
   let data;
   try {
     data = await response.json();
-  } catch {
-    return new Response(JSON.stringify({ error: "O serviço de análise retornou uma resposta inválida." }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" }
-    });
+  } catch (error) {
+    console.error("API de análise da prescrição retornou JSON inválido:", response.status, error);
+    return jsonResponse({ error: "O serviço de análise retornou uma resposta inválida." }, 502);
   }
 
   if (!response.ok) {
-    return new Response(JSON.stringify({ error: `A API de IA retornou um erro (${response.status}).` }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" }
-    });
+    console.error("API de IA recusou a análise de prescrição:", response.status);
+    return jsonResponse({ error: `A API de IA retornou um erro (${response.status}).` }, 502);
   }
 
   const analiseTexto = data.choices?.[0]?.message?.content;
   if (typeof analiseTexto !== "string" || !analiseTexto.trim()) {
-    return new Response(JSON.stringify({ error: "O serviço de análise não retornou um feedback válido." }), {
-      status: 502,
-      headers: { "Content-Type": "application/json" }
-    });
+    console.error("API de IA não retornou conteúdo de análise para a prescrição.");
+    return jsonResponse({ error: "O serviço de análise não retornou um feedback válido." }, 502);
   }
 
-  return new Response(JSON.stringify({ analise: analiseTexto }), {
-    headers: { "Content-Type": "application/json" }
-  });
+  return jsonResponse({ analise: analiseTexto });
 }

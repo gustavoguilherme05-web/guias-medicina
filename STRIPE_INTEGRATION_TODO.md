@@ -45,19 +45,22 @@ Estes valores do Checkout Studio já estão configurados no endpoint:
 
 A versão da API Stripe usada pelo servidor é `2026-03-25.dahlia`. O navegador carrega Stripe.js diretamente de `https://js.stripe.com/dahlia/stripe.js`.
 Não é necessário instalar `stripe-node`: as Cloudflare Pages Functions chamam a API Stripe com `fetch`, e o formulário usa Stripe.js hospedado pela Stripe.
+Para upgrades e gerenciamento de cobrança, configure o Customer Portal como configuração padrão no Dashboard Stripe, em cada modo usado. Habilite a atualização de assinaturas, inclua os preços mensais LITE e PRO no catálogo de produtos e defina `proration_behavior=always_invoice`. O site direciona o upgrade LITE → PRO para uma confirmação hospedada pela Stripe, que calcula a cobrança proporcional imediatamente e também trata autenticação adicional do pagamento.
 
 ## Setup e próximos passos
 
 1. No Stripe Dashboard, crie/valide dois preços recorrentes mensais e um preço de pagamento único de R$ 14,90 para EXPERIÊNCIA; confirme os IDs no arquivo [.dev.vars.example](./.dev.vars.example).
 2. Em **Cloudflare Pages → Settings → Variables and Secrets**, configure as chaves, IDs de preço, segredo do webhook e `CPF_HASH_SECRET` para cada ambiente usado (Preview e/ou Production). Use chaves, preços e webhook do mesmo modo (Test ou Live), marque os segredos como secrets e faça um novo deploy.
 3. Configure o webhook em `/api/webhook` para os eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated` e `customer.subscription.deleted`.
-4. Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha os valores de teste e use a Stripe CLI para encaminhar eventos a `http://localhost:8788/api/webhook`.
-5. O banco remoto de produção já recebeu a migração 0003. Para um novo ambiente D1, aplique as migrações com `npx.cmd wrangler d1 migrations apply guias-medicina-db --remote`.
+4. No Customer Portal padrão, habilite a atualização de assinatura, permita a troca de preço, configure os preços mensais LITE e PRO como opções compatíveis e defina `proration_behavior=always_invoice`. Ative também o gerenciamento de forma de pagamento e cancelamento conforme a política do produto.
+5. Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha os valores de teste e use a Stripe CLI para encaminhar eventos a `http://localhost:8788/api/webhook`.
+6. O banco remoto de produção já recebeu a migração 0003. Para um novo ambiente D1, aplique as migrações com `npx.cmd wrangler d1 migrations apply guias-medicina-db --remote`.
 
 ### Estrutura e fluxo
 
 - `public/assinatura.html` carrega Stripe.js Dahlia e contém o ponto de montagem do formulário.
 - `public/assinatura.js` envia a chave do plano selecionado para `/api/billing/checkout`, monta `initCheckoutFormSdk` e confirma o pagamento.
+- `functions/api/billing/status.js` fornece o plano atual para o perfil e a página de assinatura; `functions/api/billing/portal.js` cria sessões autenticadas do Customer Portal para gerenciar cobrança e confirmar upgrades.
 - `functions/api/billing/checkout.js` valida a chave do plano e seleciona o ID de preço configurado no servidor antes de criar a sessão.
 - `functions/api/webhook.js` valida a assinatura do webhook, sincroniza as assinaturas mensais e concede o acesso de sete dias do EXPERIÊNCIA uma única vez por Checkout Session.
 - `functions/_shared/stripe.js` chama a API Stripe com autenticação do lado do servidor e a versão Dahlia.
@@ -76,6 +79,6 @@ Use **Test mode** no Dashboard e um preço de teste. Exemplos de cartões de tes
 
 Use qualquer data futura e um CVC de três dígitos. Nunca use números de cartão reais para testes.
 
-Antes do modo Live, confirme os preços recorrentes e o preço único, as chaves Live, o endpoint webhook de produção e a política de cancelamento/reembolso. O portal de gerenciamento de assinaturas ainda depende das regras do produto.
+Antes do modo Live, confirme os preços recorrentes e o preço único, as chaves Live, o endpoint webhook de produção, a configuração Live do Customer Portal e a política de cancelamento/reembolso.
 
 Recursos: [Stripe Support](https://support.stripe.com), [Stripe Docs MCP](https://docs.stripe.com/mcp), [gerenciar produtos e preços](https://dashboard.stripe.com/prices).

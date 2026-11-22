@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { onRequestPost } from "../functions/api/billing/checkout.js";
 
-async function createCheckoutRequest(plan) {
+async function createCheckoutRequest(plan, accountOverrides = {}) {
   const token = "a".repeat(64);
   const email = "checkout@example.com";
   let stripeForm;
@@ -17,8 +17,10 @@ async function createCheckoutRequest(plan) {
                   return { email, name: "Test User", cpf_hash: "cpf-hash" };
                 }
                 return {
-                  stripe_customer_id: null,
-                  subscription_status: "free",
+                  stripe_customer_id: accountOverrides.stripe_customer_id || null,
+                  stripe_subscription_id: accountOverrides.stripe_subscription_id || null,
+                  subscription_status: accountOverrides.subscription_status || "free",
+                  experience_expires_at: accountOverrides.experience_expires_at || null,
                   cpf_hash: "cpf-hash"
                 };
               },
@@ -79,4 +81,15 @@ test("monthly checkout keeps payment_method_collection", async () => {
   assert.equal(stripeForm.get("mode"), "subscription");
   assert.equal(stripeForm.get("payment_method_collection"), "always");
   assert.equal(stripeForm.get("subscription_data[metadata][plan]"), "pro_mensal");
+});
+
+test("experience access can start a monthly checkout", async () => {
+  const { response, stripeForm } = await createCheckoutRequest("pro_mensal", {
+    subscription_status: "active",
+    experience_expires_at: Date.now() + 60_000
+  });
+
+  assert.equal(response.status, 200);
+  assert.equal(stripeForm.get("mode"), "subscription");
+  assert.equal(stripeForm.get("line_items[0][price]"), "price_pro_monthly");
 });

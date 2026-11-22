@@ -74,7 +74,9 @@ export async function onRequestPost({ request, env }) {
     }
 
     const account = await env.DB.prepare(
-      "SELECT stripe_customer_id, subscription_status, cpf_hash FROM users WHERE email = ?"
+      `SELECT stripe_customer_id, stripe_subscription_id, subscription_status,
+              cpf_hash, experience_expires_at
+       FROM users WHERE email = ?`
     ).bind(user.email).first();
     if (!account?.cpf_hash) {
       return jsonResponse({
@@ -82,11 +84,14 @@ export async function onRequestPost({ request, env }) {
         requiresCpf: true
       }, 409);
     }
-    if (ACTIVE_SUBSCRIPTION_STATUSES.has(account?.subscription_status)) {
+    const isExperience = body.plan === "experience";
+    const isTemporaryExperience = Boolean(account?.experience_expires_at) &&
+      !account?.stripe_subscription_id;
+    if (ACTIVE_SUBSCRIPTION_STATUSES.has(account?.subscription_status) &&
+        (!isTemporaryExperience || isExperience)) {
       return jsonResponse({ error: "Sua conta já possui uma assinatura em andamento." }, 409);
     }
 
-    const isExperience = body.plan === "experience";
     const form = new URLSearchParams();
     form.set("mode", isExperience ? "payment" : "subscription");
     form.set("ui_mode", "form");
@@ -94,6 +99,9 @@ export async function onRequestPost({ request, env }) {
       "return_url",
       new URL("/assinatura.html?checkout=return", request.url).toString()
     );
+    if (account.stripe_customer_id) {
+      form.set("customer", account.stripe_customer_id);
+    }
     if (user.email.length <= 200) {
       form.set("client_reference_id", user.email);
     }

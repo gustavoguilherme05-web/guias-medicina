@@ -68,17 +68,17 @@ function stripeId(value) {
 function getSubscriptionPlan(subscription, env) {
   if (!["active", "trialing"].includes(subscription.status)) return "free";
 
-  const metadataPlan = subscription.metadata?.plan;
-  if (Object.prototype.hasOwnProperty.call(PLAN_TIERS, metadataPlan)) {
-    return PLAN_TIERS[metadataPlan];
-  }
-
   const priceId = stripeId(subscription.items?.data?.[0]?.price);
   const matchingPlan = Object.keys(PLAN_PRICE_SETTINGS).find(
     (plan) => typeof env[PLAN_PRICE_SETTINGS[plan]] === "string" &&
       env[PLAN_PRICE_SETTINGS[plan]] === priceId
   );
-  return matchingPlan ? PLAN_TIERS[matchingPlan] : "free";
+  if (matchingPlan) return PLAN_TIERS[matchingPlan];
+
+  const metadataPlan = subscription.metadata?.plan;
+  return Object.prototype.hasOwnProperty.call(PLAN_TIERS, metadataPlan)
+    ? PLAN_TIERS[metadataPlan]
+    : "free";
 }
 
 async function syncSubscription(env, subscriptionId, customerId, email) {
@@ -129,17 +129,20 @@ async function grantExperience(env, session, eventCreatedAt) {
   }
 
   const expiresAt = getExperienceExpiry(eventCreatedAt);
+  const customerId = stripeId(session.customer);
   await env.DB.batch([
     env.DB.prepare(`
       UPDATE users
-      SET subscription_status = 'active',
+      SET stripe_customer_id = COALESCE(?, stripe_customer_id),
+          stripe_subscription_id = NULL,
+          subscription_status = 'active',
           subscription_plan = 'pro',
           experience_expires_at = MAX(COALESCE(experience_expires_at, 0), ?)
       WHERE email = ?
         AND NOT EXISTS (
           SELECT 1 FROM experience_purchases WHERE checkout_session_id = ?
         )
-    `).bind(expiresAt, email, sessionId),
+    `).bind(customerId, expiresAt, email, sessionId),
     env.DB.prepare(`
       INSERT OR IGNORE INTO experience_purchases
         (checkout_session_id, user_email, expires_at)

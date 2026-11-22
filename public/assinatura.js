@@ -10,6 +10,11 @@ const checkoutCard = planList.closest('.checkout-card');
 const planButtons = [...document.querySelectorAll('.plan-select')];
 const selectedPlanSummary = document.getElementById('selectedPlanSummary');
 const changePlanButton = document.getElementById('changePlan');
+const currentSubscription = document.getElementById('currentSubscription');
+const currentPlanTitle = document.getElementById('currentPlanTitle');
+const currentPlanDetails = document.getElementById('currentPlanDetails');
+const upgradeToProButton = document.getElementById('upgradeToPro');
+const manageBillingButton = document.getElementById('manageBilling');
 const requestedPlan = new URLSearchParams(window.location.search).get('plan');
 const planLabels = {
   prescricao_mensal: 'Pega a Diretriz LITE — R$ 19,90/mês',
@@ -17,6 +22,13 @@ const planLabels = {
   experience: 'EXPERIÊNCIA — R$ 14,90 por 7 dias (pagamento único)'
 };
 const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
+let ultimoStatusAssinatura = null;
+const currentPlanLabels = {
+  free: 'Plano gratuito',
+  experience: 'EXPERIÊNCIA',
+  prescription_only: 'Pega a Diretriz LITE',
+  pro: 'Pega a Diretriz PRO'
+};
 
 function mostrarErro(mensagem){
   errorElement.textContent = mensagem;
@@ -74,10 +86,12 @@ async function consultarAssinatura(){
 async function atualizarStatus(){
   const data = await consultarAssinatura();
   if(!data) return;
+  ultimoStatusAssinatura = data;
 
   if(data.status === 'unauthenticated'){
     statusElement.textContent = 'Entre na sua conta ao selecionar um plano para continuar.';
     cpfStep.hidden = true;
+    currentSubscription.hidden = true;
     planList.hidden = false;
     checkoutStep.hidden = true;
     checkoutCard.classList.add('has-plans');
@@ -86,6 +100,7 @@ async function atualizarStatus(){
 
   if(data.requiresCpf){
     statusElement.textContent = 'Informe seu CPF para proteger sua conta e continuar.';
+    currentSubscription.hidden = true;
     planList.hidden = true;
     checkoutStep.hidden = true;
     cpfStep.hidden = false;
@@ -94,17 +109,41 @@ async function atualizarStatus(){
   }
 
   cpfStep.hidden = true;
+  const planLabel = currentPlanLabels[data.currentPlan] || currentPlanLabels.free;
+  const experienceCard = planButtons.find(button => button.dataset.plan === 'experience')?.closest('.plan-card');
+  currentSubscription.hidden = !(data.canManageBilling || data.currentPlan !== 'free');
+  currentPlanTitle.textContent = `Plano atual: ${planLabel}`;
+  upgradeToProButton.hidden = !data.canUpgradeToPro;
+  manageBillingButton.hidden = !data.canManageBilling;
+  currentPlanDetails.textContent = data.experienceExpiresAt
+    ? `Acesso válido até ${new Date(data.experienceExpiresAt).toLocaleString('pt-BR')}.`
+    : ({
+        active: 'Assinatura ativa.',
+        trialing: 'Assinatura em período de avaliação.',
+        past_due: 'Pagamento pendente. Atualize os dados de cobrança para evitar interrupção.',
+        incomplete: 'Pagamento pendente.',
+        unpaid: 'Pagamento pendente.',
+        paused: 'Assinatura pausada.',
+        canceled: 'Assinatura cancelada.',
+        incomplete_expired: 'A tentativa anterior de pagamento expirou.',
+        free: 'Sem assinatura ativa.'
+      }[data.status] || 'Consulte os detalhes da sua assinatura.');
+
   if(data.status === 'active' || data.status === 'trialing'){
-    statusElement.textContent = data.experienceExpiresAt
-      ? `Seu plano EXPERIÊNCIA está ativo até ${new Date(data.experienceExpiresAt).toLocaleString('pt-BR')}.`
-      : (data.status === 'trialing'
-        ? 'Sua assinatura está em período de avaliação.'
-        : 'Sua assinatura está ativa.');
-    planList.hidden = true;
-    checkoutCard.classList.remove('has-plans');
+    statusElement.textContent = `${planLabel} ativo.`;
+    if(data.currentPlan === 'experience' && data.canStartCheckout){
+      if(experienceCard) experienceCard.hidden = true;
+      planList.hidden = false;
+      checkoutCard.classList.add('has-plans');
+    }else{
+      if(experienceCard) experienceCard.hidden = false;
+      planList.hidden = true;
+      checkoutCard.classList.remove('has-plans');
+    }
     return true;
   }
 
+  if(experienceCard) experienceCard.hidden = false;
   const statusLabels = {
     past_due: 'O pagamento da assinatura precisa de atenção.',
     incomplete: 'O pagamento ainda está pendente.',
@@ -258,6 +297,38 @@ async function iniciarCheckout(plan){
   }
 }
 
+async function abrirPortal(plan){
+  const button = plan === 'pro_mensal' ? upgradeToProButton : manageBillingButton;
+  button.disabled = true;
+  errorElement.hidden = true;
+  statusElement.textContent = plan
+    ? 'Preparando seu upgrade com a Stripe...'
+    : 'Abrindo o gerenciamento seguro da cobrança...';
+  try{
+    const response = await fetch('/api/billing/portal', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(plan ? { plan } : {})
+    });
+    const data = await lerRespostaJson(response, 'Não foi possível abrir o gerenciamento');
+    if(response.status === 401){
+      const destino = encodeURIComponent('assinatura.html');
+      window.location.replace('login.html?redirect=' + destino);
+      return;
+    }
+    if(!response.ok) throw new Error(data?.error || 'Não foi possível abrir o gerenciamento.');
+    if(typeof data?.url !== 'string' || !data.url){
+      throw new Error('A Stripe não retornou o endereço do gerenciamento.');
+    }
+    window.location.assign(data.url);
+  }catch(error){
+    mostrarErro(error.message || 'Não foi possível abrir o gerenciamento.');
+    statusElement.textContent = 'Não foi possível abrir o gerenciamento da assinatura.';
+    button.disabled = false;
+  }
+}
+
 planList.addEventListener('click', (event) => {
   const button = event.target.closest('.plan-select');
   if(button) iniciarCheckout(button.dataset.plan);
@@ -306,13 +377,31 @@ changePlanButton.addEventListener('click', () => {
   });
 });
 
+upgradeToProButton.addEventListener('click', () => abrirPortal('pro_mensal'));
+manageBillingButton.addEventListener('click', () => abrirPortal());
+
 (async function iniciarPaginaAssinatura(){
   try{
     const ativa = await atualizarStatus();
     if(requestedPlan &&
        planButtons.some(button => button.dataset.plan === requestedPlan) &&
-       ativa === false && cpfStep.hidden){
+       ativa === false && cpfStep.hidden && !checkoutReturned){
       await iniciarCheckout(requestedPlan);
+      return;
+    }
+    if(checkoutReturned && requestedPlan === 'pro_mensal'){
+      statusElement.textContent = 'Upgrade confirmado. Atualizando seu plano...';
+      for(let tentativa = 0; tentativa < 6; tentativa += 1){
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        await atualizarStatus();
+        if(ultimoStatusAssinatura?.currentPlan === 'pro' &&
+           ['active', 'trialing'].includes(ultimoStatusAssinatura.status)){
+          break;
+        }
+      }
+      if(ultimoStatusAssinatura?.currentPlan !== 'pro'){
+        statusElement.textContent = 'Upgrade recebido. A sincronização do plano ainda está em processamento; atualize esta página em instantes.';
+      }
       return;
     }
     if(checkoutReturned && ativa === false){

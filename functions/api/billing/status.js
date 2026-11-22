@@ -6,6 +6,7 @@ import {
 import { expireExperienceIfNeeded } from "../../_shared/experience.js";
 
 const RESTARTABLE_STATUSES = new Set(["free", "canceled", "incomplete_expired"]);
+const CURRENT_PLANS = new Set(["free", "prescription_only", "pro"]);
 
 export async function onRequestGet({ request, env }) {
   if (!hasDatabase(env)) {
@@ -20,14 +21,32 @@ export async function onRequestGet({ request, env }) {
 
     await expireExperienceIfNeeded(env, user.email);
     const account = await env.DB.prepare(
-      "SELECT subscription_status, cpf_hash, experience_expires_at FROM users WHERE email = ?"
+      `SELECT subscription_status, subscription_plan, stripe_customer_id,
+              stripe_subscription_id, cpf_hash, experience_expires_at
+       FROM users WHERE email = ?`
     ).bind(user.email).first();
     const status = account?.subscription_status || "free";
     const requiresCpf = !account?.cpf_hash;
+    const isExperience = Boolean(account?.experience_expires_at);
+    const storedPlan = account?.subscription_plan;
+    const currentPlan = isExperience
+      ? "experience"
+      : (CURRENT_PLANS.has(storedPlan) ? storedPlan : "free");
+    const hasStripeSubscription = Boolean(account?.stripe_subscription_id);
+    const isPaidStatus = ["active", "trialing"].includes(status);
     return jsonResponse({
       status,
+      currentPlan,
       requiresCpf,
-      canStartCheckout: !requiresCpf && RESTARTABLE_STATUSES.has(status),
+      canStartCheckout: !requiresCpf && (
+        RESTARTABLE_STATUSES.has(status) ||
+        (isExperience && !hasStripeSubscription)
+      ),
+      canUpgradeToPro: !requiresCpf &&
+        isPaidStatus &&
+        currentPlan === "prescription_only" &&
+        hasStripeSubscription,
+      canManageBilling: Boolean(account?.stripe_customer_id),
       experienceExpiresAt: account?.experience_expires_at || null
     });
   } catch (error) {

@@ -751,6 +751,16 @@ body.dark .prescricao-result.has-error p{ color:#F09A8B; }
 .checkout-description,.checkout-status{
   color:var(--ink-soft); font-size:.92rem;
 }
+.subscription-current{
+  display:flex; align-items:center; justify-content:space-between; gap:20px;
+  margin:24px 0; padding:20px; border:1px solid var(--line);
+  border-left:3px solid var(--vital); border-radius:var(--radius);
+  background:var(--surface);
+}
+.subscription-current[hidden]{ display:none; }
+.subscription-current h2{ margin:0; font-size:1.12rem; }
+.subscription-current p{ margin:8px 0 0; color:var(--ink-soft); font-size:.9rem; }
+.subscription-actions{ display:flex; flex-wrap:wrap; gap:10px; }
 .plan-list[hidden],.checkout-step[hidden],.checkout-error[hidden]{ display:none; }
 .checkout-card.has-plans{ max-width:1040px; }
 .plan-list-hint{ display:none; color:var(--ink-soft); font-size:.8rem; }
@@ -804,6 +814,7 @@ body.dark .checkout-error{ color:#F09A8B; }
 }
 @media(max-width:560px){
   .checkout-step-heading{ align-items:flex-start; flex-direction:column; }
+  .subscription-current{ align-items:flex-start; flex-direction:column; }
 }
 
 /* honeypot anti-spam: escondido de humanos, visível para bots */
@@ -865,6 +876,10 @@ body.dark .checkout-error{ color:#F09A8B; }
   color: var(--ink-soft); font-size:.88rem; font-style:italic;
   border: 1px dashed var(--line); border-radius: 8px; padding: 18px; text-align:center;
 }
+.perfil-assinatura{
+  margin-top:0; padding-top:0;
+}
+.perfil-assinatura p{ color:var(--ink-soft); }
 
 /* ---------- Botão de favoritar (coração) ---------- */
 

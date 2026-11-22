@@ -6,7 +6,7 @@
 <title>Assinatura — PAD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="estilo.css?v=experience-20261118">
+<link rel="stylesheet" href="estilo.css?v=subscription-management-20261122">
 <script src="https://js.stripe.com/dahlia/stripe.js"></script>
 </head>
 <body>
@@ -26,6 +26,16 @@
     <span class="home-section-eyebrow">ASSINATURA PAD</span>
     <h1 id="checkoutTitle">Escolha seu plano</h1>
     <p class="checkout-description">Escolha seu plano. Os planos mensais são cobrados a cada mês; o EXPERIÊNCIA é uma compra única com acesso por 7 dias.</p>
+    <section id="currentSubscription" class="subscription-current" aria-labelledby="currentPlanTitle" hidden>
+      <div>
+        <h2 id="currentPlanTitle">Plano atual</h2>
+        <p id="currentPlanDetails"></p>
+      </div>
+      <div class="subscription-actions">
+        <button id="upgradeToPro" class="btn btn-primary" type="button" hidden>Fazer upgrade para PRO</button>
+        <button id="manageBilling" class="btn btn-ghost" type="button" hidden>Gerenciar cobrança</button>
+      </div>
+    </section>
     <p id="subscriptionStatus" class="checkout-status" role="status" aria-live="polite">Consultando sua conta...</p>
     <div id="plan-list" class="plan-list" role="region" aria-label="Planos disponíveis" tabindex="0">
       <article class="plan-card">
@@ -99,6 +109,6 @@
 
 <script src="auth.js?v=experience-20261118"></script>
 <script src="script.js"></script>
-<script src="assinatura.js?v=experience-20261118"></script>
+<script src="assinatura.js?v=subscription-management-20261122"></script>
 </body>
 </html>
