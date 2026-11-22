@@ -210,7 +210,13 @@ async function iniciarCheckout(plan){
     statusElement.textContent = 'Preencha os dados abaixo para concluir a assinatura.';
     checkoutForm.on('confirm', async (event) => {
       try{
-        const result = await actionsResult.actions.confirm({ formConfirmEvent: event });
+        const returnUrl = new URL(window.location.href);
+        returnUrl.searchParams.set('checkout', 'return');
+        returnUrl.searchParams.delete('plan');
+        const result = await actionsResult.actions.confirm({
+          formConfirmEvent: event,
+          returnUrl: returnUrl.toString()
+        });
         if(result?.type === 'error'){
           mostrarErro(result.error?.message || 'Não foi possível confirmar o pagamento.');
         }else if(result?.type === 'success'){
