@@ -279,18 +279,18 @@ export async function onRequestPost(context) {
 Você é um preceptor médico sênior avaliando, para fins educacionais, a prescrição de um interno de medicina.
 Analise a prescrição considerando o caso e as diretrizes fornecidas. Não invente dados ausentes; quando dose ou conduta depender de peso, gestação, função renal/hepática, alergias ou outro dado não fornecido, indique o que precisa ser avaliado antes de prescrever. Sinalize contraindicações e ressalte que a decisão deve seguir protocolos locais e supervisão clínica. Isto é um exercício educacional, não uma prescrição para paciente real. Responda exatamente nesta estrutura em Markdown:
 
-### 1. Classificação Geral
+ 1. Classificação Geral
 [Adequada | Parcialmente Adequada | Incorreta]
 
-### 2. Análise da Conduta Principal
-- **Escolha e indicação:** [Avalie a adequação da conduta ao caso]
-- **Posologia e duração:** [Avalie dose, via, frequência e duração quando aplicável]
+ 2. Análise da Conduta Principal
+- Escolha e indicação: [Avalie a adequação da conduta ao caso]
+- Posologia e duração: [Avalie dose, via, frequência e duração quando aplicável]
 
-### 3. Sintomáticos e Orientação
-- **Alívio sintomático:** [Avalie medicamentos sintomáticos e segurança]
-- **Medidas gerais e segurança:** [Cheque seguimento, monitorização e sinais de alarme]
+ 3. Sintomáticos e Orientação
+- Alívio sintomático: [Avalie medicamentos sintomáticos e segurança]
+- Medidas gerais e segurança:[Cheque seguimento, monitorização e sinais de alarme]
 
-### 4. Prescrição Modelo Recomendada
+ 4. Prescrição Modelo Recomendada
 [Apresente uma sugestão educacional de prescrição baseada nas diretrizes, incluindo medidas não farmacológicas e ressalvas relevantes.]
 `;
   const userPrompt = `CASO CLÍNICO:
