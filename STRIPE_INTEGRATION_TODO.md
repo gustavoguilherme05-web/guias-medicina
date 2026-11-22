@@ -30,6 +30,7 @@ Estes valores do Checkout Studio já estão configurados no endpoint:
 | Parâmetro | Valor |
 |-----------|-------|
 | `ui_mode` | `form` |
+| `return_url` | Origem da requisição + `/assinatura.html?checkout=return` |
 | `mode` | `subscription` para planos mensais; `payment` para EXPERIÊNCIA |
 | `line_items` | Preço correspondente ao plano selecionado, quantidade `1` |
 | `billing_address_collection` | `auto` |

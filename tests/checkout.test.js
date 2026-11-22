@@ -67,6 +67,7 @@ test("one-time experience checkout omits payment_method_collection", async () =>
   assert.equal(response.status, 200);
   assert.equal(stripeForm.get("mode"), "payment");
   assert.equal(stripeForm.get("line_items[0][price]"), "price_experience");
+  assert.equal(stripeForm.get("return_url"), "https://example.com/assinatura.html?checkout=return");
   assert.equal(stripeForm.has("payment_method_collection"), false);
   assert.equal(stripeForm.get("payment_intent_data[metadata][plan]"), "experience");
 });

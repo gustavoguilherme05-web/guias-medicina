@@ -90,6 +90,10 @@ export async function onRequestPost({ request, env }) {
     const form = new URLSearchParams();
     form.set("mode", isExperience ? "payment" : "subscription");
     form.set("ui_mode", "form");
+    form.set(
+      "return_url",
+      new URL("/assinatura.html?checkout=return", request.url).toString()
+    );
     if (user.email.length <= 200) {
       form.set("client_reference_id", user.email);
     }
