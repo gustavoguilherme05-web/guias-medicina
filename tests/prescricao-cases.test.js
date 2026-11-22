@@ -27,13 +27,16 @@ test("prescription cases have unique IDs and backend feedback rubrics", () => {
   }
 });
 
-test("the 19 new cases link to distinct existing guides", () => {
+test("the 20 prescription cases link to distinct existing guides", () => {
   const casosComGuia = casos.filter((caso) => Number.isInteger(caso.guiaId));
   const guiaIds = new Set(guias.map((guia) => guia.id));
 
-  assert.equal(casosComGuia.length, 19);
-  assert.equal(new Set(casosComGuia.map((caso) => caso.guiaId)).size, 19);
+  assert.equal(casosComGuia.length, 20);
+  assert.equal(new Set(casosComGuia.map((caso) => caso.guiaId)).size, 20);
   for (const caso of casosComGuia) {
     assert.ok(guiaIds.has(caso.guiaId), `Missing guide ${caso.guiaId} for ${caso.id}`);
   }
+  const casoItu = casosComGuia.find((caso) => caso.guiaId === 23);
+  assert.equal(casoItu?.id, "itu-nao-complicada");
+  assert.match(casoItu.titulo, /ITU/);
 });

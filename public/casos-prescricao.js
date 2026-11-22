@@ -165,6 +165,25 @@ window.PRESCRIPTION_CASES = [
     ]
   },
   {
+    id: 'itu-nao-complicada',
+    guiaId: 23,
+    titulo: 'ITU não complicada — cistite aguda',
+    secoes: [
+      { titulo: 'Identificação', texto: 'Paciente do sexo feminino, 26 anos, hígida.' },
+      { titulo: 'Queixa principal', texto: '“Dor e ardor para urinar há 2 dias.”' },
+      { titulo: 'História da moléstia atual', texto: 'Paciente refere início progressivo de disúria, polaciúria (aumento da frequência urinária) e urgência miccional há 48 horas. Relata sensação de esvaziamento incompleto da bexiga e desconforto suprapúbico leve. Nega febre, calafrios, dor lombar, náuseas ou dor nos flancos. Nega corrimento vaginal ou prurido vulvar.' },
+      {
+        titulo: 'Exame físico',
+        itens: [
+          'Sinais vitais: PA 110x70 mmHg | FC 76 bpm | FR 14 irpm | Temperatura axilar 36,5 °C | SatO₂ 98% em ar ambiente.',
+          'Geral: bom estado geral, corada, hidratada e anictérica.',
+          'Abdômen: plano, flácido, indolor à palpação profunda em andar superior. Discreta dor à palpação profunda em região suprapúbica. Sem sinais de peritonismo.',
+          'Sinal de Giordano (punho-percussão lombar): negativo bilateralmente.'
+        ]
+      }
+    ]
+  },
+  {
     id: 'artrite-reumatoide',
     guiaId: 15,
     titulo: 'Artrite Reumatoide (AR)',
