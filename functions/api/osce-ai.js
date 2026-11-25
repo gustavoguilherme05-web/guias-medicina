@@ -8,7 +8,7 @@ import { expireExperienceIfNeeded } from "../_shared/experience.js";
 
 const DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/";
 const DEFAULT_MODEL = "gemini-3.8-flash";
-const OSCE_TRIAL_SESSION_TTL_MS = 15 * 60 * 1000;
+const OSCE_TRIAL_SESSION_TTL_MS = 30 * 60 * 1000;
 const OSCE_UPGRADE_REQUIRED = {
   requiresUpgrade: true,
   message: "Teste do OSCE esgotado. Assine o plano PRO para uso ilimitado."
@@ -491,6 +491,9 @@ export async function onRequestPost(context) {
     data = await response.json();
   } catch {
     return jsonResponse({ error: "A API de IA retornou uma resposta inválida." }, 502);
+  }
+  if (!data || typeof data !== "object" || Array.isArray(data)) {
+    return jsonResponse({ error: "A API de IA retornou uma resposta sem estrutura válida." }, 502);
   }
   if (!response.ok) {
     return jsonResponse({ error: `A API de IA retornou um erro (${response.status}).` }, 502);

@@ -415,11 +415,15 @@
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ mode, messages, trialSessionToken, caseId: activeCase.id })
     });
+    const responseBody = await response.text();
     let data;
     try {
-      data = await response.json();
+      data = JSON.parse(responseBody);
     } catch {
-      throw new Error('O serviço de IA retornou uma resposta inválida.');
+      throw new Error(`O serviço OSCE retornou uma resposta não JSON (HTTP ${response.status}).`);
+    }
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error(`O serviço OSCE retornou dados inválidos (HTTP ${response.status}).`);
     }
     if (!response.ok) throw new Error(data.error || data.message || 'Não foi possível obter uma resposta da IA.');
     if (typeof data.content !== 'string' || !data.content.trim()) {
