@@ -465,38 +465,75 @@ export async function onRequestPost(context) {
     }
   }
 
+  const completionRequest = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: body.mode === "patient" ? selectedCase.patientPrompt : selectedCase.preceptorPrompt },
+        ...messages
+      ],
+      temperature: body.mode === "patient" ? 0.7 : 0.1
+    })
+  };
   let response;
-  try {
-    response = await fetch(endpoint, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: body.mode === "patient" ? selectedCase.patientPrompt : selectedCase.preceptorPrompt },
-          ...messages
-        ],
-        temperature: body.mode === "patient" ? 0.7 : 0.1
-      })
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      response = await fetch(endpoint, completionRequest);
+    } catch (error) {
+      console.error("Falha ao conectar à API de IA:", { mode: body.mode, attempt: attempt + 1, error });
+      if (attempt === 0) {
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        continue;
+      }
+      return jsonResponse({ error: "Não foi possível conectar à API de IA após duas tentativas. Verifique a URL e a disponibilidade do provedor." }, 502);
+    }
+
+    if (response.status < 500 || attempt === 1) break;
+    await response.body?.cancel();
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+
+  if (!response.ok) {
+    let providerMessage = "";
+    let providerBody = "";
+    try {
+      providerBody = await response.text();
+      const errorData = JSON.parse(providerBody);
+      const message = errorData?.error?.message || errorData?.error || errorData?.message;
+      if (typeof message === "string") providerMessage = message.replace(/\s+/g, " ").trim().slice(0, 300);
+    } catch {
+      providerMessage = "O provedor não retornou detalhes em JSON.";
+    }
+    console.error("A API de IA retornou erro:", {
+      mode: body.mode,
+      status: response.status,
+      contentType: response.headers.get("content-type")
     });
-  } catch {
-    return jsonResponse({ error: "Não foi possível conectar à API de IA. Verifique a URL e a disponibilidade do provedor." }, 502);
+    const detail = providerMessage ? ` ${providerMessage}` : "";
+    return jsonResponse({
+      error: `A API de IA retornou erro (${response.status}).${detail}`,
+      upstreamStatus: response.status
+    }, 502);
   }
 
   let data;
   try {
     data = await response.json();
   } catch {
+    console.error("A API de IA retornou JSON inválido:", {
+      mode: body.mode,
+      status: response.status,
+      contentType: response.headers.get("content-type")
+    });
     return jsonResponse({ error: "A API de IA retornou uma resposta inválida." }, 502);
   }
   if (!data || typeof data !== "object" || Array.isArray(data)) {
     return jsonResponse({ error: "A API de IA retornou uma resposta sem estrutura válida." }, 502);
-  }
-  if (!response.ok) {
-    return jsonResponse({ error: `A API de IA retornou um erro (${response.status}).` }, 502);
   }
 
   const content = data.choices?.[0]?.message?.content;
