@@ -1,6 +1,10 @@
 (() => {
-  const SESSION_SECONDS = 10 * 60;
+  const SESSION_SECONDS = 15 * 60;
+  const cases = window.OSCE_CASES || [];
+  const requestedCaseId = new URLSearchParams(window.location.search).get('caso');
+  const activeCase = cases.find((item) => item.id === requestedCaseId);
   const screens = {
+    catalog: document.getElementById('caseListScreen'),
     briefing: document.getElementById('briefingScreen'),
     simulation: document.getElementById('simulationScreen'),
     debrief: document.getElementById('debriefScreen')
@@ -20,31 +24,209 @@
   let sessionEnded = false;
   let waitingForPatient = false;
   let trialSessionToken = null;
-  const findings = { vitals: false, ecg: false, chestXray: false };
+  const findings = {
+    vitals: false,
+    physicalExam: false,
+    ecg: false,
+    chestXray: false,
+    echo: false,
+    labs: false,
+    renalLabs: false,
+    urinalysis: false,
+    uacr: false,
+    troponin: false,
+    gasometry: false,
+    hemogram: false,
+    crp: false,
+    liverLabs: false,
+    paracentesis: false,
+    venousDoppler: false
+  };
 
-  const vitalSigns = [
-    { label: 'Pressão arterial', value: '150/90', unit: 'mmHg' },
-    { label: 'Frequência cardíaca', value: '108', unit: 'bpm' },
-    { label: 'Frequência respiratória', value: '26', unit: 'irpm' },
-    { label: 'Saturação O₂', value: '91', unit: '%' },
-    { label: 'Temperatura', value: '36,8', unit: '°C' }
-  ];
+  const vitalSignsByCase = {
+    'icc-cronica-otimizacao': [
+      { label: 'Pressão arterial', value: '120/80', unit: 'mmHg' },
+      { label: 'Frequência cardíaca', value: '74', unit: 'bpm' },
+      { label: 'Frequência respiratória', value: '14', unit: 'irpm' },
+      { label: 'Saturação O₂', value: '97', unit: '% em ar ambiente' }
+    ],
+    'edema-doenca-renal-cronica': [
+      { label: 'Pressão arterial', value: '158/96', unit: 'mmHg' },
+      { label: 'Frequência cardíaca', value: '78', unit: 'bpm' },
+      { label: 'Frequência respiratória', value: '18', unit: 'irpm' },
+      { label: 'Saturação O₂', value: '96', unit: '% em ar ambiente' },
+      { label: 'Peso atual', value: '84', unit: 'kg · +4 kg em 3 semanas' }
+    ],
+    'cirrose-hepatica-ascite': [
+      { label: 'Pressão arterial', value: '150/90', unit: 'mmHg' },
+      { label: 'Frequência cardíaca', value: '110', unit: 'bpm' },
+      { label: 'Frequência respiratória', value: '24', unit: 'irpm' },
+      { label: 'Saturação O₂', value: '98', unit: '% em ar ambiente' },
+      { label: 'Temperatura', value: '36,5', unit: '°C' },
+      { label: 'Peso', value: '110', unit: 'kg' }
+    ],
+    'erisipela-mid': [
+      { label: 'Pressão arterial', value: '110/80', unit: 'mmHg' },
+      { label: 'Frequência cardíaca', value: '88', unit: 'bpm' },
+      { label: 'Frequência respiratória', value: '14', unit: 'irpm' },
+      { label: 'Saturação O₂', value: '99', unit: '% em ar ambiente' },
+      { label: 'Temperatura', value: '37,0', unit: '°C' }
+    ]
+  };
 
-  const examinationResults = {
-    ecg: {
-      title: 'Eletrocardiograma',
-      summary: 'Ritmo sinusal, frequência aumentada. Sem alterações agudas do segmento ST nesta simulação.'
+  const examinationResultsByCase = {
+    'icc-cronica-otimizacao': {
+      physicalExam: {
+        title: 'Exame físico',
+        summary: 'Bom estado geral, corado, hidratado, acianótico e anictérico. Extremidades quentes e bem perfundidas, TEC 2 segundos. Ritmo cardíaco regular em 2 tempos, bulhas normofonéticas, sem sopros ou B3. Sem turgência jugular. Murmúrio vesicular presente e simétrico, sem ruídos adventícios. Membros inferiores sem edema, panturrilhas livres e pulsos periféricos presentes e simétricos.'
+      },
+      echo: {
+        title: 'Ecocardiograma transtorácico recente',
+        summary: 'FEVE: 32%, compatível com disfunção sistólica importante do ventrículo esquerdo.'
+      },
+      labs: {
+        title: 'Função renal e eletrólitos',
+        summary: 'Exames laboratoriais básicos dentro da normalidade e estáveis nesta estação.'
+      }
     },
-    chestXray: {
-      title: 'Radiografia de tórax',
-      summary: 'Opacidades intersticiais bilaterais e silhueta cardíaca aumentada no cenário fictício.'
+    'edema-doenca-renal-cronica': {
+      physicalExam: {
+        title: 'Exame físico',
+        summary: 'Bom estado geral, descorado (+/4+), acianótico e anictérico. Edema bipalpebral. Tireoide sem alterações à palpação. Ritmo cardíaco regular em 2 tempos, bulhas normofonéticas, sem sopros ou estase jugular a 45°. Murmúrio vesicular presente nos ápices e diminuído nas bases, com macicez à percussão nas bases bilateralmente e broncofonia diminuída. Abdômen globoso, indolor, ruídos hidroaéreos presentes e hepatimetria normal. Edema bilateral, simétrico, frio, indolor, pré-tibial e maleolar, cacifo 3+/4+ (Godet positivo); pulsos presentes e simétricos.'
+      },
+      renalLabs: {
+        title: 'Bioquímica sérica',
+        summary: 'Creatinina: 2,1 mg/dL · Ureia: 84 mg/dL · TFGe: 32 mL/min/1,73 m² · Potássio: 5,1 mEq/L · Sódio: 138 mEq/L · Glicemia de jejum: 162 mg/dL · HbA1c: 8,7%.'
+      },
+      urinalysis: {
+        title: 'Urina tipo 1 (EAS)',
+        summary: 'Aspecto ligeiramente turvo, densidade 1.015, pH 5,5, proteínas +++ (300 mg/dL), glicose ++, cetonas e sangue ausentes. 2 leucócitos e 1 hemácia por campo; sem nitrito ou cilindros patológicos.'
+      },
+      uacr: {
+        title: 'Relação albumina/creatinina urinária (UACR)',
+        summary: '450 mg/g (referência < 30 mg/g).'
+      }
+    },
+    'cirrose-hepatica-ascite': {
+      physicalExam: {
+        title: 'Exame físico',
+        summary: 'Regular estado geral, descorado 2+/4+, desidratado 1+/4+, acianótico e ictérico 2+/4+. Lúcido e orientado, com abertura ocular espontânea e obediência a comandos. Acantose nigricans em axilas e região inguinal, eritema palmar bilateral e ginecomastia. Sem linfonodos palpáveis; oroscopia sem lesões visíveis. Bulhas rítmicas em 2 tempos, sem sopros. Murmúrio vesicular bilateral, globalmente reduzido e sem ruídos adventícios. Abdômen distendido, ascite volumosa, indolor, piparote positivo, macicez móvel e semicírculo de Skoda positivos; sem massas ou visceromegalias, fígado palpável com bordas irregulares e romboides. Edema bilateral 1+/4+, dermatite ocre, sem empastamento, extremidades quentes e TEC < 3 segundos.'
+      },
+      liverLabs: {
+        title: 'Albumina sérica e exames para avaliação hepática',
+        status: 'RESULTADO PARCIAL',
+        summary: 'Albumina sérica: 2,5 g/dL. Bilirrubina total, TP/INR e demais exames necessários ao Child-Pugh não têm resultados disponíveis nesta estação.'
+      },
+      paracentesis: {
+        title: 'Paracentese diagnóstica e de alívio',
+        summary: 'Volume retirado: 10 L. Celularidade: 80 células/mm³; neutrófilos: 60%; linfomononucleares: 40%; albumina do líquido ascítico: 1,3 g/dL.'
+      }
+    },
+    'erisipela-mid': {
+      physicalExam: {
+        title: 'Exame físico',
+        summary: 'Bom estado geral, corado, hidratado, acianótico e anictérico. Pupilas isocóricas e fotorreagentes, lúcido e orientado, força grau V globalmente. Sem outras lesões cutâneas visíveis ou linfonodos palpáveis. Orofaringe sem lesões. Bulhas rítmicas em 2 tempos, sem sopros; murmúrio vesicular bilateral, sem ruídos adventícios. Abdômen plano, flácido e indolor, sem massas ou visceromegalias. Edema 2+/4+, quente, eritematoso, elástico e bem delimitado na região medial do membro inferior direito; sem empastamento da panturrilha. Movimentação livre apesar da dor, membro contralateral sem edema ou empastamento, pulsos presentes e firmes, TEC < 3 segundos.'
+      },
+      venousDoppler: {
+        title: 'Doppler venoso do membro inferior direito',
+        summary: 'Ausência de TVP. Espessamento e aumento da ecogenicidade do tecido celular subcutâneo, com aumento da vascularização ao Doppler colorido, predominando na região de maior alteração cutânea; achados compatíveis com processo inflamatório/infeccioso de partes moles. Sem coleções líquidas organizadas ou abscessos nas áreas avaliadas.'
+      }
+    },
+    'icc-aguda-perfil-b': {
+      physicalExam: {
+        title: 'Exame físico',
+        summary: 'Paciente taquipneico, usando musculatura acessória e pálido, com extremidades quentes e bem perfundidas e TEC 2 segundos. Bulhas taquicárdicas, ritmo regular, B3 audível em ápice e turgência jugular patológica a 45°. Estertores crepitantes difusos até o terço médio dos dois hemitórax. Edema bilateral de membros inferiores 2+/4+, cacifo positivo, frio e indolor.'
+      },
+      ecg: {
+        title: 'Eletrocardiograma',
+        available: false,
+        summary: 'Solicitado. Esta estação não fornece o resultado.'
+      },
+      troponin: {
+        title: 'Troponina',
+        available: false,
+        summary: 'Solicitada. Esta estação não fornece o resultado.'
+      },
+      chestXray: {
+        title: 'Radiografia de tórax',
+        available: false,
+        summary: 'Solicitada. Esta estação não fornece o resultado.'
+      },
+      gasometry: {
+        title: 'Gasometria arterial',
+        available: false,
+        summary: 'Solicitada. Esta estação não fornece o resultado.'
+      },
+      hemogram: {
+        title: 'Hemograma',
+        available: false,
+        summary: 'Solicitado. Esta estação não fornece o resultado.'
+      },
+      crp: {
+        title: 'Proteína C-reativa (PCR)',
+        available: false,
+        summary: 'Solicitada. Esta estação não fornece o resultado.'
+      },
+      labs: {
+        title: 'Função renal e eletrólitos',
+        available: false,
+        summary: 'Solicitados. Esta estação não fornece o resultado.'
+      }
     }
   };
 
   function showScreen(name) {
     Object.entries(screens).forEach(([screen, element]) => {
-      element.hidden = screen !== name;
+      if (screen === 'catalog') {
+        element.hidden = name !== 'catalog';
+      } else {
+        element.hidden = screen !== name;
+      }
     });
+  }
+
+  function renderCaseCatalog() {
+    const list = document.getElementById('osceCaseList');
+    cases.forEach((item) => {
+      const card = document.createElement('a');
+      card.className = 'osce-case-card';
+      card.href = `osce.html?caso=${encodeURIComponent(item.id)}`;
+
+      const eyebrow = document.createElement('span');
+      eyebrow.className = 'osce-eyebrow';
+      eyebrow.textContent = `${item.station} · ${item.specialty}`;
+      const title = document.createElement('strong');
+      title.textContent = item.title;
+      const summary = document.createElement('p');
+      summary.textContent = item.summary;
+      const detail = document.createElement('span');
+      detail.className = 'osce-case-card-action';
+      detail.textContent = 'Conhecer caso →';
+      card.append(eyebrow, title, summary, detail);
+      list.appendChild(card);
+    });
+  }
+
+  function setCaseContent() {
+    const stationLabel = `${activeCase.station} · ${activeCase.specialty}`;
+    document.getElementById('briefingEyebrow').textContent = stationLabel;
+    document.getElementById('briefingTitle').textContent = activeCase.title;
+    document.getElementById('briefingPatient').textContent = `${activeCase.patientName} · ${activeCase.age} anos`;
+    document.getElementById('briefingScenario').textContent = activeCase.scenario;
+    document.getElementById('briefingSetting').textContent = activeCase.setting;
+    const name = document.getElementById('sessionPatientName');
+    name.replaceChildren();
+    name.append(document.createTextNode(activeCase.patientName));
+    const age = document.createElement('span');
+    age.textContent = ` · ${activeCase.age} anos`;
+    name.appendChild(age);
+    document.querySelector('.osce-avatar-patient').textContent = activeCase.initials;
+    document.getElementById('scenarioEyebrow').textContent = stationLabel;
+    document.getElementById('scenarioModalText').textContent = activeCase.scenario;
+    document.getElementById('scenarioModalSetting').textContent = activeCase.setting;
+    document.getElementById('transcriptEyebrow').textContent = stationLabel;
+    document.getElementById('reportCaseCaption').textContent =
+      `${activeCase.station} · ${activeCase.specialty} · ${activeCase.patientName}, ${activeCase.age} anos`;
   }
 
   function formatTime(totalSeconds) {
@@ -79,13 +261,13 @@
     const avatar = document.createElement('span');
     avatar.className = 'osce-message-avatar';
     avatar.setAttribute('aria-hidden', 'true');
-    avatar.textContent = role === 'doctor' ? 'DR' : 'JM';
+    avatar.textContent = role === 'doctor' ? 'DR' : activeCase.initials;
 
     const body = document.createElement('div');
     body.className = 'osce-message-body';
     const name = document.createElement('span');
     name.className = 'osce-message-name';
-    name.textContent = role === 'doctor' ? 'Você · Médico' : 'João Martins · Paciente';
+    name.textContent = role === 'doctor' ? 'Você · Médico' : `${activeCase.patientName} · Paciente`;
     const bubble = document.createElement('div');
     bubble.className = 'osce-message-bubble';
     bubble.textContent = text;
@@ -110,7 +292,7 @@
     document.getElementById('vitalsEmpty').hidden = true;
     const results = document.getElementById('vitalsResults');
     results.hidden = false;
-    vitalSigns.forEach((vital) => {
+    (vitalSignsByCase[activeCase.id] || []).forEach((vital) => {
       const card = document.createElement('div');
       card.className = 'osce-vital-card';
       const label = document.createElement('span');
@@ -126,13 +308,15 @@
 
   function showExam(examKey) {
     if (findings[examKey]) return;
+    const result = examinationResultsByCase[activeCase.id]?.[examKey];
+    if (!result) return;
     findings[examKey] = true;
-    const result = examinationResults[examKey];
     document.getElementById('examsEmpty').hidden = true;
     const card = document.createElement('article');
     card.className = 'osce-exam-card';
     const status = document.createElement('span');
-    status.textContent = 'RESULTADO DISPONÍVEL';
+    status.textContent = result.status ||
+      (result.available === false ? 'SEM RESULTADO NESTA ESTAÇÃO' : 'RESULTADO DISPONÍVEL');
     const title = document.createElement('strong');
     title.textContent = result.title;
     const summary = document.createElement('p');
@@ -140,7 +324,9 @@
     card.append(status, title, summary);
     document.getElementById('examResults').appendChild(card);
     const examCount = document.getElementById('examCount');
-    const total = Number(findings.ecg) + Number(findings.chestXray);
+    const total = Object.entries(findings)
+      .filter(([key]) => key !== 'vitals')
+      .reduce((count, [, requested]) => count + Number(requested), 0);
     examCount.textContent = String(total);
     examCount.hidden = false;
     selectSupportTab('exams');
@@ -148,17 +334,49 @@
 
   function processRequest(text) {
     const normalized = normalizedText(text);
-    const requestsVitals = /sinais vitais|verificar.*(sinais|vital|pressao|saturacao)|aferir.*(pressao|sinais)|pressao arterial|frequencia cardiaca|saturacao|temperatura|pulso/.test(normalized);
+    const requestsVitals = /sinais vitais|verificar.*(sinais|vital|pressao|saturacao)|aferir.*(pressao|sinais)|pressao arterial|frequencia cardiaca|saturacao|temperatura|pulso|peso|ganho de peso/.test(normalized);
+    const requestsPhysicalExam = /exame fisico|examinar|ausculta|auscultar|palpar|palpacao|turgencia jugular|jugular|cacifo|godet|tireoide|ascite|figado|exame das pernas|avaliar edema/.test(normalized);
     const requestsEcg = /\becg\b|eletrocardiograma/.test(normalized);
     const requestsXray = /raio.?x|radiografia|rx de torax/.test(normalized);
+    const requestsTroponin = /troponina/.test(normalized);
+    const requestsGasometry = /gasometria|gasometria arterial/.test(normalized);
+    const requestsHemogram = /hemograma/.test(normalized);
+    const requestsCrp = /\bpcr\b|proteina c reativa/.test(normalized);
+    const requestsEcho = /ecocardiograma|ecocardiografia|eco cardiograma/.test(normalized);
+    const requestsVenousDoppler = /doppler|ultrassom.*(venoso|perna)|ultrassonografia.*(venosa|perna)/.test(normalized);
+    const requestsLabs = /funcao renal|creatinina|eletr[oó]litos|potassio|exames laboratoriais|laboratorio/.test(normalized);
+    const requestsLiverLabs = /child.?pugh|funcao hepatica|hepatograma|bilirrubina|albumina serica|albumina no sangue|inr|rni|protrombina|coagulograma|transaminases/.test(normalized);
+    const requestsParacentesis = /paracentese|puncao.*ascite|drenagem.*ascite/.test(normalized);
+    const requestsGeneralLabs = /exames laboratoriais|exames de triagem renal|triagem renal/.test(normalized);
+    const requestsRenalLabs = /funcao renal|creatinina|ureia|tfge|taxa de filtracao|potassio|sodio|glicemia|glicose|hba1c|hemoglobina glicada/.test(normalized);
+    const requestsUrinalysis = /\beas\b|urina tipo ?1|urinalise|sedimentoscopia/.test(normalized);
+    const requestsUacr = /uacr|albumina\/creatinina|relacao albumina|albuminuria|proteinuria/.test(normalized);
     const vitalsAlreadyAvailable = findings.vitals;
 
     if (requestsVitals && !findings.vitals) showVitals();
+    if (requestsPhysicalExam && !findings.physicalExam) showExam('physicalExam');
     if (requestsEcg && !findings.ecg) {
       showExam('ecg');
     }
     if (requestsXray && !findings.chestXray) {
       showExam('chestXray');
+    }
+    if (requestsTroponin && !findings.troponin) showExam('troponin');
+    if (requestsGasometry && !findings.gasometry) showExam('gasometry');
+    if (requestsHemogram && !findings.hemogram) showExam('hemogram');
+    if (requestsCrp && !findings.crp) showExam('crp');
+    if (requestsEcho && !findings.echo) showExam('echo');
+    if (activeCase.id === 'edema-doenca-renal-cronica') {
+      if ((requestsGeneralLabs || requestsRenalLabs) && !findings.renalLabs) showExam('renalLabs');
+      if ((requestsGeneralLabs || requestsUrinalysis) && !findings.urinalysis) showExam('urinalysis');
+      if ((requestsGeneralLabs || requestsUacr) && !findings.uacr) showExam('uacr');
+    } else if (activeCase.id === 'cirrose-hepatica-ascite') {
+      if ((requestsLabs || requestsLiverLabs) && !findings.liverLabs) showExam('liverLabs');
+      if (requestsParacentesis && !findings.paracentesis) showExam('paracentesis');
+    } else if (activeCase.id === 'erisipela-mid') {
+      if (requestsVenousDoppler && !findings.venousDoppler) showExam('venousDoppler');
+    } else if (requestsLabs && !findings.labs) {
+      showExam('labs');
     }
     if (requestsVitals && vitalsAlreadyAvailable) selectSupportTab('vitals');
   }
@@ -182,12 +400,7 @@
     });
   }
 
-  const checklistCriteria = [
-    { id: 'symptoms', label: 'Investigou sintomas e início do quadro' },
-    { id: 'allergies', label: 'Perguntou sobre alergias' },
-    { id: 'ecg', label: 'Solicitou ECG' },
-    { id: 'furosemide', label: 'Propôs furosemida' }
-  ];
+  const checklistCriteria = activeCase?.checklist || [];
 
   function conversationMessages() {
     return transcript.map((message) => ({
@@ -200,7 +413,7 @@
     const response = await fetch('/api/osce-ai', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ mode, messages, trialSessionToken })
+      body: JSON.stringify({ mode, messages, trialSessionToken, caseId: activeCase.id })
     });
     let data;
     try {
@@ -335,7 +548,7 @@
       const entry = document.createElement('article');
       entry.className = `osce-transcript-entry ${message.role === 'doctor' ? 'is-doctor' : ''}`;
       const speaker = document.createElement('strong');
-      speaker.textContent = message.role === 'doctor' ? 'Você · Médico' : 'João Martins · Paciente';
+      speaker.textContent = message.role === 'doctor' ? 'Você · Médico' : `${activeCase.patientName} · Paciente`;
       const text = document.createElement('p');
       text.textContent = message.text;
       entry.append(speaker, text);
@@ -357,15 +570,18 @@
     aiStatus.textContent = 'Conectando ao paciente…';
     aiStatus.hidden = false;
     document.getElementById('finishButton').disabled = false;
-    findings.vitals = false;
-    findings.ecg = false;
-    findings.chestXray = false;
+    Object.keys(findings).forEach((key) => {
+      findings[key] = false;
+    });
     document.getElementById('vitalsEmpty').hidden = false;
     document.getElementById('vitalsResults').replaceChildren();
     document.getElementById('vitalsResults').hidden = true;
     document.getElementById('examsEmpty').hidden = false;
     document.getElementById('examResults').replaceChildren();
     document.getElementById('examCount').hidden = true;
+    document.querySelectorAll('.osce-notes-fields textarea').forEach((field) => {
+      field.value = '';
+    });
     selectSupportTab('vitals');
     setMobilePanel('chat');
     showScreen('simulation');
@@ -468,8 +684,21 @@
     secondsRemaining = SESSION_SECONDS;
     updateTimer();
     sessionEnded = false;
-    showScreen('briefing');
+    showScreen('catalog');
+    window.history.replaceState({}, '', 'osce.html');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  document.getElementById('backToCasesButton').addEventListener('click', () => {
+    window.location.href = 'osce.html';
+  });
+
+  renderCaseCatalog();
+  if (activeCase) {
+    setCaseContent();
+    showScreen('briefing');
+  } else {
+    showScreen('catalog');
+  }
 
 })();
