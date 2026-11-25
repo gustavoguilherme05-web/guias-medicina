@@ -420,18 +420,10 @@
     try {
       data = JSON.parse(responseBody);
     } catch {
-      const preview = responseBody
-        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
-        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim()
-        .slice(0, 180);
-      const detail = preview ? ` ${preview}` : '';
-      throw new Error(`O serviço OSCE retornou uma resposta não JSON (HTTP ${response.status}).${detail}`);
+      throw new Error('O serviço de IA retornou uma resposta inválida.');
     }
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new Error(`O serviço OSCE retornou dados inválidos (HTTP ${response.status}).`);
+      throw new Error('O serviço de IA retornou uma resposta inválida.');
     }
     if (!response.ok) throw new Error(data.error || data.message || 'Não foi possível obter uma resposta da IA.');
     if (typeof data.content !== 'string' || !data.content.trim()) {
@@ -568,7 +560,7 @@
     });
   }
 
-  document.getElementById('startButton').addEventListener('click', async () => {
+  document.getElementById('startButton').addEventListener('click', () => {
     sessionEnded = false;
     waitingForPatient = false;
     const tokenBytes = new Uint8Array(32);
@@ -577,10 +569,9 @@
     transcript.length = 0;
     messageList.replaceChildren();
     chatInput.value = '';
-    chatInput.disabled = true;
-    sendButton.disabled = true;
-    aiStatus.textContent = 'Conectando ao paciente…';
-    aiStatus.hidden = false;
+    chatInput.disabled = false;
+    sendButton.disabled = false;
+    aiStatus.hidden = true;
     document.getElementById('finishButton').disabled = false;
     Object.keys(findings).forEach((key) => {
       findings[key] = false;
@@ -598,23 +589,7 @@
     setMobilePanel('chat');
     showScreen('simulation');
     startTimer();
-    try {
-      const greeting = await requestAi('patient', conversationMessages());
-      if (!sessionEnded) {
-        addMessage('patient', greeting);
-        aiStatus.hidden = true;
-      }
-    } catch (error) {
-      if (!sessionEnded) {
-        aiStatus.textContent = `Não foi possível iniciar a conversa: ${error.message}`;
-      }
-    } finally {
-      if (!sessionEnded) {
-        chatInput.disabled = false;
-        sendButton.disabled = false;
-        chatInput.focus();
-      }
-    }
+    chatInput.focus();
   });
 
   chatForm.addEventListener('submit', async (event) => {
