@@ -420,7 +420,15 @@
     try {
       data = JSON.parse(responseBody);
     } catch {
-      throw new Error(`O serviço OSCE retornou uma resposta não JSON (HTTP ${response.status}).`);
+      const preview = responseBody
+        .replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, ' ')
+        .replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim()
+        .slice(0, 180);
+      const detail = preview ? ` ${preview}` : '';
+      throw new Error(`O serviço OSCE retornou uma resposta não JSON (HTTP ${response.status}).${detail}`);
     }
     if (!data || typeof data !== 'object' || Array.isArray(data)) {
       throw new Error(`O serviço OSCE retornou dados inválidos (HTTP ${response.status}).`);

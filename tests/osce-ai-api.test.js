@@ -41,22 +41,35 @@ function createContext() {
     body: JSON.stringify({
       mode: "debrief",
       caseId: "icc-cronica-otimizacao",
-      messages: [{ role: "user", content: "Avalie a consulta." }]
+      messages: [
+        { role: "assistant", content: "Olá." },
+        { role: "user", content: "O que aconteceu?" },
+        { role: "assistant", content: "Estou com falta de ar." }
+      ]
     })
   });
 
   return { request, env };
 }
 
-test("OSCE debrief retries once after a transient AI provider failure", async () => {
+test("OSCE debrief retries after transient provider failure even if response cleanup fails", async () => {
   const originalFetch = globalThis.fetch;
   const { request, env } = createContext();
   let attempts = 0;
+  let sentMessages;
 
-  globalThis.fetch = async () => {
+  globalThis.fetch = async (_url, options) => {
     attempts += 1;
+    sentMessages = JSON.parse(options.body).messages;
     if (attempts === 1) {
-      return new Response("temporarily unavailable", { status: 502 });
+      return {
+        status: 502,
+        body: {
+          async cancel() {
+            throw new Error("stream cleanup failed");
+          }
+        }
+      };
     }
     return new Response(JSON.stringify({
       choices: [{ message: { content: '{"finalScore":0}' } }]
@@ -70,6 +83,15 @@ test("OSCE debrief retries once after a transient AI provider failure", async ()
     assert.equal(response.status, 200);
     assert.equal(attempts, 2);
     assert.equal(data.content, '{"finalScore":0}');
+    assert.deepEqual(sentMessages.map((message) => message.role), [
+      "system",
+      "assistant",
+      "user",
+      "assistant",
+      "user"
+    ]);
+    assert.equal(sentMessages.at(-1).role, "user");
+    assert.match(sentMessages.at(-1).content, /gere agora o relatório/i);
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -83,9 +105,9 @@ test("OSCE reports the upstream status and message when the AI provider rejects 
   globalThis.fetch = async () => {
     attempts += 1;
     return new Response(JSON.stringify({
-      error: { message: "Invalid provider configuration." }
+      error: { message: "Invalid chat completion request." }
     }), {
-      status: 401,
+      status: 400,
       headers: { "Content-Type": "application/json" }
     });
   };
@@ -96,8 +118,8 @@ test("OSCE reports the upstream status and message when the AI provider rejects 
 
     assert.equal(response.status, 502);
     assert.equal(attempts, 1);
-    assert.equal(data.upstreamStatus, 401);
-    assert.match(data.error, /Invalid provider configuration/);
+    assert.equal(data.upstreamStatus, 400);
+    assert.match(data.error, /Invalid chat completion request/);
   } finally {
     globalThis.fetch = originalFetch;
   }

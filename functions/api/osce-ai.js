@@ -403,6 +403,17 @@ export async function onRequestPost(context) {
     }, 500);
   }
 
+  const completionMessages = [...messages];
+  if (body.mode === "debrief") {
+    const evaluationInstruction = "Avalie a conversa acima e gere agora o relatório no formato JSON definido nas instruções.";
+    const lastMessage = completionMessages[completionMessages.length - 1];
+    if (lastMessage?.role === "user") {
+      lastMessage.content = `${lastMessage.content}\n\n${evaluationInstruction}`;
+    } else {
+      completionMessages.push({ role: "user", content: evaluationInstruction });
+    }
+  }
+
   let endpoint;
   try {
     endpoint = new URL(`${baseUrl.replace(/\/+$/, "")}/chat/completions`);
@@ -475,7 +486,7 @@ export async function onRequestPost(context) {
       model,
       messages: [
         { role: "system", content: body.mode === "patient" ? selectedCase.patientPrompt : selectedCase.preceptorPrompt },
-        ...messages
+        ...completionMessages
       ],
       temperature: body.mode === "patient" ? 0.7 : 0.1
     })
@@ -494,7 +505,15 @@ export async function onRequestPost(context) {
     }
 
     if (response.status < 500 || attempt === 1) break;
-    await response.body?.cancel();
+    try {
+      await response.body?.cancel();
+    } catch (error) {
+      console.error("Não foi possível descartar a resposta transitória da API de IA:", {
+        mode: body.mode,
+        status: response.status,
+        error
+      });
+    }
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
 
