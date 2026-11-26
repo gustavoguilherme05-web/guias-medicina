@@ -19,7 +19,7 @@ const ACTIVE_SUBSCRIPTION_STATUSES = new Set([
 ]);
 
 const PLAN_PRICE_SETTINGS = {
-  prescricao_mensal: "STRIPE_PRICE_PRESCRICAO_MENSAL",
+  prescricao_mensal: "STRIPE_PRICE_PAD_LITE",
   pro_mensal: "STRIPE_PRICE_PRO_MENSAL",
   experience: "STRIPE_PRICE_EXPERIENCIA"
 };
@@ -117,7 +117,7 @@ export async function onRequestPost({ request, env }) {
     form.set("name_collection[individual][optional]", "true");
     form.set("submit_type", "auto");
     form.set("integration_identifier", "custom_embedded_web_0001");
-    if (isExperience) {
+    if (isOneTimePackage) {
       form.set("payment_intent_data[metadata][plan]", body.plan);
     } else {
       form.set("payment_method_collection", "always");

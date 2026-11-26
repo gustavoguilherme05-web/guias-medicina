@@ -34,7 +34,6 @@ export async function onRequestGet({ request, env }) {
       ? "experience"
       : (CURRENT_PLANS.has(storedPlan) ? storedPlan : "free");
     const hasStripeSubscription = Boolean(account?.stripe_subscription_id);
-    const isPaidStatus = ["active", "trialing"].includes(status);
     return jsonResponse({
       status,
       currentPlan,
@@ -43,10 +42,6 @@ export async function onRequestGet({ request, env }) {
         RESTARTABLE_STATUSES.has(status) ||
         (isExperience && !hasStripeSubscription)
       ),
-      canUpgradeToPro: !requiresCpf &&
-        isPaidStatus &&
-        currentPlan === "prescription_only" &&
-        hasStripeSubscription,
       canManageBilling: Boolean(account?.stripe_customer_id),
       experienceExpiresAt: account?.experience_expires_at || null
     });

@@ -13,7 +13,6 @@ const changePlanButton = document.getElementById('changePlan');
 const currentSubscription = document.getElementById('currentSubscription');
 const currentPlanTitle = document.getElementById('currentPlanTitle');
 const currentPlanDetails = document.getElementById('currentPlanDetails');
-const upgradeToProButton = document.getElementById('upgradeToPro');
 const manageBillingButton = document.getElementById('manageBilling');
 const requestedPlan = new URLSearchParams(window.location.search).get('plan');
 const planLabels = {
@@ -113,7 +112,6 @@ async function atualizarStatus(){
   const experienceCard = planButtons.find(button => button.dataset.plan === 'experience')?.closest('.plan-card');
   currentSubscription.hidden = !(data.canManageBilling || data.currentPlan !== 'free');
   currentPlanTitle.textContent = `Plano atual: ${planLabel}`;
-  upgradeToProButton.hidden = !data.canUpgradeToPro;
   manageBillingButton.hidden = !data.canManageBilling;
   currentPlanDetails.textContent = data.experienceExpiresAt
     ? `Acesso válido até ${new Date(data.experienceExpiresAt).toLocaleString('pt-BR')}.`
@@ -297,19 +295,16 @@ async function iniciarCheckout(plan){
   }
 }
 
-async function abrirPortal(plan){
-  const button = plan === 'pro_mensal' ? upgradeToProButton : manageBillingButton;
-  button.disabled = true;
+async function abrirPortal(){
+  manageBillingButton.disabled = true;
   errorElement.hidden = true;
-  statusElement.textContent = plan
-    ? 'Preparando seu upgrade com a Stripe...'
-    : 'Abrindo o gerenciamento seguro da cobrança...';
+  statusElement.textContent = 'Abrindo o gerenciamento seguro da cobrança...';
   try{
     const response = await fetch('/api/billing/portal', {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(plan ? { plan } : {})
+      body: JSON.stringify({})
     });
     const data = await lerRespostaJson(response, 'Não foi possível abrir o gerenciamento');
     if(response.status === 401){
@@ -325,7 +320,7 @@ async function abrirPortal(plan){
   }catch(error){
     mostrarErro(error.message || 'Não foi possível abrir o gerenciamento.');
     statusElement.textContent = 'Não foi possível abrir o gerenciamento da assinatura.';
-    button.disabled = false;
+    manageBillingButton.disabled = false;
   }
 }
 
@@ -377,7 +372,6 @@ changePlanButton.addEventListener('click', () => {
   });
 });
 
-upgradeToProButton.addEventListener('click', () => abrirPortal('pro_mensal'));
 manageBillingButton.addEventListener('click', () => abrirPortal());
 
 (async function iniciarPaginaAssinatura(){
@@ -387,21 +381,6 @@ manageBillingButton.addEventListener('click', () => abrirPortal());
        planButtons.some(button => button.dataset.plan === requestedPlan) &&
        ativa === false && cpfStep.hidden && !checkoutReturned){
       await iniciarCheckout(requestedPlan);
-      return;
-    }
-    if(checkoutReturned && requestedPlan === 'pro_mensal'){
-      statusElement.textContent = 'Upgrade confirmado. Atualizando seu plano...';
-      for(let tentativa = 0; tentativa < 6; tentativa += 1){
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        await atualizarStatus();
-        if(ultimoStatusAssinatura?.currentPlan === 'pro' &&
-           ['active', 'trialing'].includes(ultimoStatusAssinatura.status)){
-          break;
-        }
-      }
-      if(ultimoStatusAssinatura?.currentPlan !== 'pro'){
-        statusElement.textContent = 'Upgrade recebido. A sincronização do plano ainda está em processamento; atualize esta página em instantes.';
-      }
       return;
     }
     if(checkoutReturned && ativa === false){

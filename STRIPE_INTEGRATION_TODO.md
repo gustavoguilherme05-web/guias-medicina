@@ -4,7 +4,7 @@ Este arquivo reúne os valores e tarefas necessários para testar e publicar o c
 
 ## Values to Replace
 
-O endpoint recebe apenas a chave do plano; os IDs de preço correspondentes permanecem no servidor. Os planos mensais usam `mode=subscription`; EXPERIÊNCIA usa `mode=payment` e libera sete dias de acesso sem renovação. Configure os dois preços recorrentes e o preço único no ambiente local e no Cloudflare Pages.
+O endpoint recebe apenas a chave do plano; os IDs de preço correspondentes permanecem no servidor. PAD PRO usa `mode=subscription`; PAD EXPERIÊNCIA e PAD LITE usam `mode=payment` e liberam cotas de uso sem renovação. Configure os preços únicos e o preço recorrente no ambiente local e no Cloudflare Pages.
 
 **Arquivo com valores de exemplo:**
 - [.dev.vars.example](./.dev.vars.example)
@@ -13,10 +13,11 @@ O endpoint recebe apenas a chave do plano; os IDs de preço correspondentes perm
 |-------|-----------------|------------------|
 | `STRIPE_SECRET_KEY` | `replace_with_stripe_test_secret_key` | Chave secreta do mesmo modo Stripe (`sk_test_...` ou `sk_live_...`); mantenha-a como secret no Cloudflare. |
 | `STRIPE_PUBLISHABLE_KEY` | `replace_with_stripe_test_publishable_key` | Chave publicável correspondente (`pk_test_...` ou `pk_live_...`). |
-| `STRIPE_PRICE_PRESCRICAO_MENSAL` | `price_1UcXEFD03My4X5KW3iO2v8TM` | Preço mensal de Treino de Prescrição, no mesmo modo Stripe das chaves. |
+| `STRIPE_PRICE_PAD_LITE` | `replace_with_stripe_pad_lite_one_time_price_id` | Preço único de R$ 24,90 do PAD LITE, sem recorrência, no mesmo modo Stripe das chaves. |
+| `STRIPE_PRICE_PRESCRICAO_MENSAL` | `price_1UcXEFD03My4X5KW3iO2v8TM` | Preço legado para reconhecer assinaturas LITE antigas no webhook; não é usado para novas compras. |
 | `STRIPE_PRICE_PRO_MENSAL` | `price_1UcXCKD03My4X5KWjhowgWEN` | Preço mensal de Pega Diretriz PRO, no mesmo modo Stripe das chaves. |
 | `STRIPE_PRICE_PRO_TRIMESTRAL` | `price_1UcXCvD03My4X5KWRNEHPYyz` | Mantido somente para sincronizar assinaturas trimestrais antigas; não é mais oferecido no checkout. |
-| `STRIPE_PRICE_EXPERIENCIA` | `replace_with_stripe_experience_one_time_price_id` | Preço único de R$ 14,90 do plano EXPERIÊNCIA (sem recorrência), no mesmo modo Stripe das chaves. |
+| `STRIPE_PRICE_EXPERIENCIA` | `replace_with_stripe_experience_one_time_price_id` | Preço único de R$ 14,90 do PAD EXPERIÊNCIA (sem recorrência), no mesmo modo Stripe das chaves. |
 | `STRIPE_WEBHOOK_SECRET` | `replace_with_stripe_webhook_secret` | Signing secret do endpoint webhook (`whsec_...`); mantenha-o como secret. |
 | `CPF_HASH_SECRET` | `replace_with_a_random_secret_at_least_32_characters` | Segredo aleatório de pelo menos 32 caracteres usado para gerar identificadores HMAC dos CPFs; mantenha-o como secret e use o mesmo valor em ambientes que compartilham o banco. |
 
@@ -31,12 +32,12 @@ Estes valores do Checkout Studio já estão configurados no endpoint:
 |-----------|-------|
 | `ui_mode` | `form` |
 | `return_url` | Origem da requisição + `/assinatura.html?checkout=return` |
-| `mode` | `subscription` para planos mensais; `payment` para EXPERIÊNCIA |
+| `mode` | `subscription` para PAD PRO; `payment` para PAD EXPERIÊNCIA e PAD LITE |
 | `line_items` | Preço correspondente ao plano selecionado, quantidade `1` |
 | `billing_address_collection` | `auto` |
 | `phone_number_collection.enabled` | `false` |
 | `automatic_tax.enabled` | `false` |
-| `payment_method_collection` | `always` somente para planos mensais recorrentes |
+| `payment_method_collection` | `always` somente para PAD PRO |
 | `submit_type` | `auto` |
 | `name_collection.individual.enabled` | `true` |
 | `name_collection.individual.optional` | `true` |
@@ -45,14 +46,14 @@ Estes valores do Checkout Studio já estão configurados no endpoint:
 
 A versão da API Stripe usada pelo servidor é `2026-03-25.dahlia`. O navegador carrega Stripe.js diretamente de `https://js.stripe.com/dahlia/stripe.js`.
 Não é necessário instalar `stripe-node`: as Cloudflare Pages Functions chamam a API Stripe com `fetch`, e o formulário usa Stripe.js hospedado pela Stripe.
-Para upgrades e gerenciamento de cobrança, configure o Customer Portal como configuração padrão no Dashboard Stripe, em cada modo usado. Habilite a atualização de assinaturas, inclua os preços mensais LITE e PRO no catálogo de produtos e defina `proration_behavior=always_invoice`. O site direciona o upgrade LITE → PRO para uma confirmação hospedada pela Stripe, que calcula a cobrança proporcional imediatamente e também trata autenticação adicional do pagamento.
+Para gerenciamento de cobrança do PAD PRO, configure o Customer Portal como configuração padrão no Dashboard Stripe. O site não oferece upgrade entre planos; usuários podem gerenciar a cobrança recorrente do PAD PRO.
 
 ## Setup e próximos passos
 
-1. No Stripe Dashboard, crie/valide dois preços recorrentes mensais e um preço de pagamento único de R$ 14,90 para EXPERIÊNCIA; confirme os IDs no arquivo [.dev.vars.example](./.dev.vars.example).
+1. No Stripe Dashboard, crie/valide preços únicos de R$ 14,90 para PAD EXPERIÊNCIA e R$ 24,90 para PAD LITE, além do preço recorrente mensal de R$ 39,90 para PAD PRO; configure os IDs de preço correspondentes.
 2. Em **Cloudflare Pages → Settings → Variables and Secrets**, configure as chaves, IDs de preço, segredo do webhook e `CPF_HASH_SECRET` para cada ambiente usado (Preview e/ou Production). Use chaves, preços e webhook do mesmo modo (Test ou Live), marque os segredos como secrets e faça um novo deploy.
 3. Configure o webhook em `/api/webhook` para os eventos `checkout.session.completed`, `checkout.session.async_payment_succeeded`, `customer.subscription.created`, `customer.subscription.updated` e `customer.subscription.deleted`.
-4. No Customer Portal padrão, habilite a atualização de assinatura, permita a troca de preço, configure os preços mensais LITE e PRO como opções compatíveis e defina `proration_behavior=always_invoice`. Ative também o gerenciamento de forma de pagamento e cancelamento conforme a política do produto.
+4. No Customer Portal padrão, habilite o gerenciamento de forma de pagamento e cancelamento conforme a política do PAD PRO.
 5. Para desenvolvimento local, copie `.dev.vars.example` para `.dev.vars`, preencha os valores de teste e use a Stripe CLI para encaminhar eventos a `http://localhost:8788/api/webhook`.
 6. O banco remoto de produção já recebeu a migração 0003. Para um novo ambiente D1, aplique as migrações com `npx.cmd wrangler d1 migrations apply guias-medicina-db --remote`.
 
@@ -60,14 +61,14 @@ Para upgrades e gerenciamento de cobrança, configure o Customer Portal como con
 
 - `public/assinatura.html` carrega Stripe.js Dahlia e contém o ponto de montagem do formulário.
 - `public/assinatura.js` envia a chave do plano selecionado para `/api/billing/checkout`, monta `initCheckoutFormSdk` e confirma o pagamento.
-- `functions/api/billing/status.js` fornece o plano atual para o perfil e a página de assinatura; `functions/api/billing/portal.js` cria sessões autenticadas do Customer Portal para gerenciar cobrança e confirmar upgrades.
+- `functions/api/billing/status.js` fornece o plano atual para o perfil e a página de assinatura; `functions/api/billing/portal.js` cria sessões autenticadas do Customer Portal para gerenciar cobrança.
 - `functions/api/billing/checkout.js` valida a chave do plano e seleciona o ID de preço configurado no servidor antes de criar a sessão.
-- `functions/api/webhook.js` valida a assinatura do webhook, sincroniza as assinaturas mensais e concede o acesso de sete dias do EXPERIÊNCIA uma única vez por Checkout Session.
+- `functions/api/webhook.js` valida a assinatura do webhook, sincroniza assinaturas PAD PRO e concede os planos de pagamento único.
 - `functions/_shared/stripe.js` chama a API Stripe com autenticação do lado do servidor e a versão Dahlia.
 - O cadastro exige CPF válido e armazena somente um HMAC; configure `CPF_HASH_SECRET` como secret no ambiente local e em cada ambiente Cloudflare. A migração `0005_unique_cpf.sql` deve ser aplicada antes do deploy.
-- A migração `0006_experience_access.sql` adiciona o prazo de expiração do EXPERIÊNCIA e o registro idempotente das compras recebidas pelo webhook.
+- A migração `0006_experience_access.sql` mantém compatibilidade com os registros antigos do EXPERIÊNCIA.
 
-O backend registra o status e a expiração do EXPERIÊNCIA no D1. O checkout aplica o acesso temporário por sete dias ao OSCE e ao treino de prescrição.
+O backend registra as cotas dos planos de pagamento único no D1.
 
 ### Testes
 

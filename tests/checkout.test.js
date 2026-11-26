@@ -34,6 +34,7 @@ async function createCheckoutRequest(plan, accountOverrides = {}) {
     },
     STRIPE_SECRET_KEY: "sk_test_placeholder",
     STRIPE_PUBLISHABLE_KEY: "pk_test_placeholder",
+    STRIPE_PRICE_PAD_LITE: "price_lite_once",
     STRIPE_PRICE_EXPERIENCIA: "price_experience",
     STRIPE_PRICE_PRO_MENSAL: "price_pro_monthly"
   };
@@ -72,6 +73,17 @@ test("one-time experience checkout omits payment_method_collection", async () =>
   assert.equal(stripeForm.get("return_url"), "https://example.com/assinatura.html?checkout=return");
   assert.equal(stripeForm.has("payment_method_collection"), false);
   assert.equal(stripeForm.get("payment_intent_data[metadata][plan]"), "experience");
+});
+
+test("PAD LITE starts a one-time checkout with payment metadata", async () => {
+  const { response, stripeForm } = await createCheckoutRequest("prescricao_mensal");
+
+  assert.equal(response.status, 200);
+  assert.equal(stripeForm.get("mode"), "payment");
+  assert.equal(stripeForm.get("line_items[0][price]"), "price_lite_once");
+  assert.equal(stripeForm.get("payment_intent_data[metadata][plan]"), "prescricao_mensal");
+  assert.equal(stripeForm.has("payment_method_collection"), false);
+  assert.equal(stripeForm.has("subscription_data[metadata][plan]"), false);
 });
 
 test("monthly checkout keeps payment_method_collection", async () => {

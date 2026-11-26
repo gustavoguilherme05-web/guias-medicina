@@ -94,4 +94,10 @@ A migração `0006_experience_access.sql` registra o prazo de expiração do pla
 npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
 ```
 
-Configure `STRIPE_PRICE_EXPERIENCIA` no Stripe como preço único (não recorrente) de R$ 14,90 e informe o respectivo ID no ambiente do Cloudflare e em `.dev.vars`.
+As cotas de compras únicas do PAD EXPERIÊNCIA e PAD LITE usam as colunas adicionadas por `0007_plan_usage_quotas.sql`. Aplique as migrações pendentes antes do deploy:
+
+```powershell
+npx.cmd wrangler d1 migrations apply guias-medicina-db --remote
+```
+
+Configure `STRIPE_PRICE_EXPERIENCIA` e `STRIPE_PRICE_PAD_LITE` no Stripe como preços únicos (não recorrentes) de R$ 14,90 e R$ 24,90, respectivamente. Configure `STRIPE_PRICE_PRO_MENSAL` como preço recorrente mensal de R$ 39,90. Informe os respectivos IDs no ambiente do Cloudflare e em `.dev.vars`.

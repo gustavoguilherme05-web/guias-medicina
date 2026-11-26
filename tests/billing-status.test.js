@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { onRequestGet } from "../functions/api/billing/status.js";
 
-test("billing status exposes the current LITE plan and its PRO upgrade action", async () => {
+test("billing status exposes the current LITE plan without an upgrade action", async () => {
   const token = "a".repeat(64);
   const env = {
     DB: {
@@ -41,6 +41,6 @@ test("billing status exposes the current LITE plan and its PRO upgrade action", 
 
   assert.equal(response.status, 200);
   assert.equal(data.currentPlan, "prescription_only");
-  assert.equal(data.canUpgradeToPro, true);
+  assert.equal(data.canUpgradeToPro, undefined);
   assert.equal(data.canManageBilling, true);
 });

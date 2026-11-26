@@ -126,7 +126,6 @@
     `;
 
     const subscriptionStatus = document.getElementById('perfilAssinaturaStatus');
-    const subscriptionLink = document.getElementById('perfilAssinaturaLink');
     try{
       const response = await fetch('/api/billing/status', { credentials: 'same-origin' });
       const data = await response.json();
@@ -152,9 +151,6 @@
         ? `Acesso até ${new Date(data.experienceExpiresAt).toLocaleString('pt-BR')}.`
         : (statusNames[data.status] || 'Consulte os detalhes da assinatura.');
       subscriptionStatus.textContent = `Plano atual: ${planName}. ${details}`;
-      if(data.canUpgradeToPro){
-        subscriptionLink.textContent = 'Fazer upgrade para PRO';
-      }
     }catch(error){
       subscriptionStatus.textContent = error.message || 'Não foi possível consultar seu plano.';
     }
