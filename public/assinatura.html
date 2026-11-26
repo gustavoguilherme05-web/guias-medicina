@@ -25,7 +25,7 @@
   <section class="checkout-card has-plans" aria-labelledby="checkoutTitle">
     <span class="home-section-eyebrow">ASSINATURA PAD</span>
     <h1 id="checkoutTitle">Escolha seu plano</h1>
-    <p class="checkout-description">Escolha seu plano. Os planos mensais são cobrados a cada mês; o EXPERIÊNCIA é uma compra única com acesso por 7 dias.</p>
+    <p class="checkout-description">Escolha seu plano. O PAD PRO é mensal; PAD EXPERIÊNCIA e PAD LITE são pagamentos únicos.</p>
     <section id="currentSubscription" class="subscription-current" aria-labelledby="currentPlanTitle" hidden>
       <div>
         <h2 id="currentPlanTitle">Plano atual</h2>
@@ -39,35 +39,35 @@
     <p id="subscriptionStatus" class="checkout-status" role="status" aria-live="polite">Consultando sua conta...</p>
     <div id="plan-list" class="plan-list" role="region" aria-label="Planos disponíveis" tabindex="0">
       <article class="plan-card">
-        <h2 class="plan-title">Pega a Diretriz LITE</h2>
-        <p class="plan-price">R$ 19,90<span>/mês</span></p>
+        <h2 class="plan-title">PAD EXPERIÊNCIA</h2>
+        <p class="plan-price">R$ 14,90</p>
         <ul class="plan-features">
-          <li>Corretor de prescrição ilimitado</li>
-          <li>Acesso às diretrizes médicas</li>
-          <li>Não inclui o simulador OSCE</li>
+          <li>2 prescrições com análise por IA</li>
+          <li>1 simulador de OSCE</li>
+          <li>Pagamento único</li>
+        </ul>
+        <button class="btn btn-ghost plan-select" type="button" data-plan="experience">Selecionar plano</button>
+      </article>
+      <article class="plan-card">
+        <h2 class="plan-title">PAD LITE</h2>
+        <p class="plan-price">R$ 24,90</p>
+        <ul class="plan-features">
+          <li>5 prescrições com análise por IA</li>
+          <li>3 simuladores de OSCE</li>
+          <li>Pagamento único</li>
         </ul>
         <button class="btn btn-ghost plan-select" type="button" data-plan="prescricao_mensal">Selecionar plano</button>
       </article>
       <article class="plan-card plan-card-popular">
         <span class="plan-badge">MAIS ESCOLHIDO</span>
-        <h2 class="plan-title">Pega a Diretriz PRO</h2>
-        <p class="plan-price">R$ 29,90<span>/mês</span></p>
+        <h2 class="plan-title">PAD PRO</h2>
+        <p class="plan-price">R$ 39,90<span>/mês</span></p>
         <ul class="plan-features">
-          <li>Corretor de prescrição ilimitado</li>
-          <li>Simulador OSCE com IA ilimitado</li>
-          <li>Acesso às diretrizes médicas</li>
+          <li>Corretor de Prescrições Médicas ilimitado</li>
+          <li>3 simuladores de OSCE por dia</li>
+          <li>Cobrança mensal</li>
         </ul>
         <button class="btn btn-primary plan-select" type="button" data-plan="pro_mensal">Selecionar plano</button>
-      </article>
-      <article class="plan-card">
-        <h2 class="plan-title">EXPERIÊNCIA</h2>
-        <p class="plan-price">R$ 14,90<span>/7 dias</span></p>
-        <ul class="plan-features">
-          <li>Acesso ao simulador OSCE</li>
-          <li>Acesso ao treino de prescrição</li>
-          <li>Pagamento único, sem renovação automática</li>
-        </ul>
-        <button class="btn btn-ghost plan-select" type="button" data-plan="experience">Selecionar plano</button>
       </article>
     </div>
     <p class="plan-list-hint">Deslize para o lado para ver os planos.</p>

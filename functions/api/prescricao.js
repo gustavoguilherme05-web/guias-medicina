@@ -181,7 +181,7 @@ export const RUBRICAS_POR_CASO = {
 };
 
 function getSubscriptionPlan(account) {
-  const tierStatuses = new Set(["free", "prescription_only", "pro"]);
+  const tierStatuses = new Set(["free", "experience", "prescription_only", "pro"]);
   if (tierStatuses.has(account.subscription_status)) {
     return account.subscription_status;
   }
@@ -193,7 +193,7 @@ function getSubscriptionPlan(account) {
 }
 
 function getPlanCondition(account, plan) {
-  if (["free", "prescription_only", "pro"].includes(account.subscription_status)) {
+  if (["free", "experience", "prescription_only", "pro"].includes(account.subscription_status)) {
     return {
       sql: "subscription_status = ?",
       value: account.subscription_status
@@ -228,7 +228,8 @@ export async function onRequestPost(context) {
     await expireExperienceIfNeeded(env, user.email);
     account = await env.DB.prepare(`
       SELECT subscription_status, subscription_plan,
-             prescriptions_today_count, last_prescription_date
+             prescriptions_today_count, last_prescription_date,
+             prescription_package_count
       FROM users
       WHERE email = ?
     `).bind(user.email).first();
@@ -313,15 +314,27 @@ ${caso.diretriz}`;
   const today = new Date().toISOString().split("T")[0];
   const plan = getSubscriptionPlan(account);
   const isFree = plan === "free";
-  if (!isFree && plan !== "prescription_only" && plan !== "pro") {
+  const isExperience = plan === "experience";
+  const isLite = plan === "prescription_only";
+  const isPro = plan === "pro";
+  if (isFree &&
+      account.last_prescription_date === today &&
+      account.prescriptions_today_count >= 1) {
     return jsonResponse({
       requiresUpgrade: true,
       message: "Limite diário atingido. Assine um plano para uso ilimitado."
     }, 403);
   }
-  if (isFree &&
-      account.last_prescription_date === today &&
-      account.prescriptions_today_count >= 1) {
+  if ((isExperience || isLite) &&
+      Number(account.prescription_package_count || 0) >= (isExperience ? 2 : 5)) {
+    return jsonResponse({
+      requiresUpgrade: true,
+      message: isExperience
+        ? "Limite do plano PAD EXPERIÊNCIA atingido."
+        : "Limite do plano PAD LITE atingido."
+    }, 403);
+  }
+  if (!isFree && !isExperience && !isLite && !isPro) {
     return jsonResponse({
       requiresUpgrade: true,
       message: "Limite diário atingido. Assine um plano para uso ilimitado."
@@ -331,20 +344,32 @@ ${caso.diretriz}`;
   const planCondition = getPlanCondition(account, plan);
 
   try {
-    const update = await env.DB.prepare(`
-      UPDATE users
-      SET prescriptions_today_count = CASE
-            WHEN last_prescription_date = ? THEN prescriptions_today_count + 1
-            ELSE 1
-          END,
-          last_prescription_date = ?
-      WHERE email = ?
-        AND (${planCondition.sql})
-        AND (
-          ? != 'free' OR
-          (CASE WHEN last_prescription_date = ? THEN prescriptions_today_count ELSE 0 END) < 1
-        )
-    `).bind(today, today, user.email, planCondition.value, plan, today).run();
+    let update;
+    if (isExperience || isLite) {
+      const limit = isExperience ? 2 : 5;
+      update = await env.DB.prepare(`
+        UPDATE users
+        SET prescription_package_count = prescription_package_count + 1
+        WHERE email = ?
+          AND (${planCondition.sql})
+          AND prescription_package_count < ?
+      `).bind(user.email, planCondition.value, limit).run();
+    } else {
+      update = await env.DB.prepare(`
+        UPDATE users
+        SET prescriptions_today_count = CASE
+              WHEN last_prescription_date = ? THEN prescriptions_today_count + 1
+              ELSE 1
+            END,
+            last_prescription_date = ?
+        WHERE email = ?
+          AND (${planCondition.sql})
+          AND (
+            ? != 'free' OR
+            (CASE WHEN last_prescription_date = ? THEN prescriptions_today_count ELSE 0 END) < 1
+          )
+      `).bind(today, today, user.email, planCondition.value, plan, today).run();
+    }
 
     if (update.meta?.changes !== 1) {
       return jsonResponse({

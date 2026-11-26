@@ -17,17 +17,17 @@ const upgradeToProButton = document.getElementById('upgradeToPro');
 const manageBillingButton = document.getElementById('manageBilling');
 const requestedPlan = new URLSearchParams(window.location.search).get('plan');
 const planLabels = {
-  prescricao_mensal: 'Pega a Diretriz LITE — R$ 19,90/mês',
-  pro_mensal: 'Pega a Diretriz PRO — R$ 29,90/mês',
-  experience: 'EXPERIÊNCIA — R$ 14,90 por 7 dias (pagamento único)'
+  prescricao_mensal: 'PAD LITE — R$ 24,90 (pagamento único)',
+  pro_mensal: 'PAD PRO — R$ 39,90/mês',
+  experience: 'PAD EXPERIÊNCIA — R$ 14,90 (pagamento único)'
 };
 const checkoutReturned = new URLSearchParams(window.location.search).get('checkout') === 'return';
 let ultimoStatusAssinatura = null;
 const currentPlanLabels = {
   free: 'Plano gratuito',
-  experience: 'EXPERIÊNCIA',
-  prescription_only: 'Pega a Diretriz LITE',
-  pro: 'Pega a Diretriz PRO'
+  experience: 'PAD EXPERIÊNCIA',
+  prescription_only: 'PAD LITE',
+  pro: 'PAD PRO'
 };
 
 function mostrarErro(mensagem){

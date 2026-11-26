@@ -15,7 +15,7 @@ const OSCE_UPGRADE_REQUIRED = {
 };
 
 function getSubscriptionPlan(account) {
-  const tierStatuses = new Set(["free", "prescription_only", "pro"]);
+  const tierStatuses = new Set(["free", "experience", "prescription_only", "pro"]);
   if (tierStatuses.has(account.subscription_status)) {
     return account.subscription_status;
   }
@@ -27,7 +27,7 @@ function getSubscriptionPlan(account) {
 }
 
 function getPlanCondition(account, plan) {
-  if (["free", "prescription_only", "pro"].includes(account.subscription_status)) {
+  if (["free", "experience", "prescription_only", "pro"].includes(account.subscription_status)) {
     return {
       sql: "subscription_status = ?",
       value: account.subscription_status
@@ -332,7 +332,8 @@ export async function onRequestPost(context) {
     await expireExperienceIfNeeded(env, user.email);
     account = await env.DB.prepare(`
       SELECT subscription_status, subscription_plan, osce_trial_used,
-             osce_trial_session_hash, osce_trial_session_expires_at
+             osce_trial_session_hash, osce_trial_session_expires_at,
+             osce_package_count, osce_usage_count, osce_usage_date
       FROM users
       WHERE email = ?
     `).bind(user.email).first();
@@ -373,8 +374,10 @@ export async function onRequestPost(context) {
 
   const plan = getSubscriptionPlan(account);
   const isPro = plan === "pro";
-  const needsTrial = plan === "free" || plan === "prescription_only";
-  if (!isPro && !needsTrial) {
+  const isExperience = plan === "experience";
+  const isLite = plan === "prescription_only";
+  const needsFreeTrial = plan === "free";
+  if (!isPro && !needsFreeTrial && !isExperience && !isLite) {
     return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
   }
 
@@ -422,7 +425,7 @@ export async function onRequestPost(context) {
     return jsonResponse({ error: "A URL da API de IA não é válida." }, 500);
   }
 
-  if (needsTrial) {
+  if (needsFreeTrial || isExperience || isLite) {
     const trialSessionToken = body.trialSessionToken;
     if (typeof trialSessionToken !== "string" || !/^[a-f0-9]{64}$/.test(trialSessionToken)) {
       return jsonResponse({ error: "Sessão OSCE inválida. Reinicie a simulação." }, 400);
@@ -433,46 +436,108 @@ export async function onRequestPost(context) {
       const now = Date.now();
       const sessionIsActive = account.osce_trial_session_hash === sessionHash &&
         Number(account.osce_trial_session_expires_at) > now;
+      const planCondition = getPlanCondition(account, plan);
 
-      if (account.osce_trial_used === 1) {
-        if (!sessionIsActive) {
-          return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
-        }
-      } else {
-        const planCondition = getPlanCondition(account, plan);
-        const reservation = await env.DB.prepare(`
-          UPDATE users
-          SET osce_trial_used = 1,
-              osce_trial_session_hash = ?,
-              osce_trial_session_expires_at = ?
-          WHERE email = ?
-            AND (${planCondition.sql})
-            AND osce_trial_used = 0
-        `).bind(
-          sessionHash,
-          now + OSCE_TRIAL_SESSION_TTL_MS,
-          user.email,
-          planCondition.value
-        ).run();
-
-        if (reservation.meta?.changes !== 1) {
-          const currentAccount = await env.DB.prepare(`
-            SELECT subscription_status, subscription_plan, osce_trial_used,
-                   osce_trial_session_hash, osce_trial_session_expires_at
-            FROM users
+      if (needsFreeTrial) {
+        if (account.osce_trial_used === 1) {
+          if (!sessionIsActive) return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
+        } else {
+          const reservation = await env.DB.prepare(`
+            UPDATE users
+            SET osce_trial_used = 1,
+                osce_trial_session_hash = ?,
+                osce_trial_session_expires_at = ?
             WHERE email = ?
-          `).bind(user.email).first();
-          const concurrentSameSession = (currentAccount && getSubscriptionPlan(currentAccount) === "pro") ||
-            (currentAccount?.osce_trial_session_hash === sessionHash &&
-             Number(currentAccount.osce_trial_session_expires_at) > Date.now());
-          if (!concurrentSameSession) {
+              AND (${planCondition.sql})
+              AND osce_trial_used = 0
+          `).bind(sessionHash, now + OSCE_TRIAL_SESSION_TTL_MS, user.email, planCondition.value).run();
+          if (reservation.meta?.changes !== 1 && !sessionIsActive) {
             return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
           }
         }
+      } else if (isExperience || isLite) {
+        const limit = isExperience ? 1 : 3;
+        if (sessionIsActive) {
+          // Reuse da mesma sessão não consome uma nova simulação.
+        } else {
+          if (Number(account.osce_package_count || 0) >= limit) {
+            return jsonResponse({
+              requiresUpgrade: true,
+              message: isExperience
+                ? "Limite do plano PAD EXPERIÊNCIA atingido."
+                : "Limite do plano PAD LITE atingido."
+            }, 403);
+          }
+          const reservation = await env.DB.prepare(`
+            UPDATE users
+            SET osce_package_count = osce_package_count + 1,
+                osce_trial_session_hash = ?,
+                osce_trial_session_expires_at = ?
+            WHERE email = ?
+              AND (${planCondition.sql})
+              AND osce_package_count < ?
+          `).bind(sessionHash, now + OSCE_TRIAL_SESSION_TTL_MS, user.email, planCondition.value, limit).run();
+          if (reservation.meta?.changes !== 1) {
+            return jsonResponse({ requiresUpgrade: true, message: "Limite de simuladores OSCE atingido." }, 403);
+          }
+        }
+      } else {
+        return jsonResponse(OSCE_UPGRADE_REQUIRED, 403);
       }
     } catch (error) {
       console.error("Falha ao reservar o teste gratuito do OSCE:", error);
       return jsonResponse({ error: "Não foi possível registrar seu teste OSCE agora." }, 500);
+    }
+  }
+
+  if (isPro) {
+    const trialSessionToken = body.trialSessionToken;
+    const validSessionToken = typeof trialSessionToken === "string" &&
+      /^[a-f0-9]{64}$/.test(trialSessionToken);
+    const sessionHash = validSessionToken ? await hashText(trialSessionToken) : null;
+    const today = new Date().toISOString().split("T")[0];
+    const now = Date.now();
+    if (sessionHash && account.osce_trial_session_hash === sessionHash &&
+        Number(account.osce_trial_session_expires_at) > now) {
+      // Reutilização da mesma sessão não consome um novo simulador diário.
+    } else {
+    const currentCount = account.osce_usage_date === today
+      ? Number(account.osce_usage_count || 0)
+      : 0;
+    if (currentCount >= 3) {
+      return jsonResponse({
+        requiresUpgrade: false,
+        message: "Limite diário de 3 simuladores OSCE atingido."
+      }, 403);
+    }
+    const planCondition = getPlanCondition(account, plan);
+    try {
+      const update = await env.DB.prepare(`
+        UPDATE users
+        SET osce_usage_count = CASE
+              WHEN osce_usage_date = ? THEN osce_usage_count + 1
+              ELSE 1
+            END,
+            osce_usage_date = ?,
+            osce_trial_session_hash = ?,
+            osce_trial_session_expires_at = ?
+        WHERE email = ?
+          AND (${planCondition.sql})
+          AND (
+            osce_usage_date = ? AND osce_usage_count < 3
+            OR osce_usage_date != ? OR osce_usage_date IS NULL
+          )
+      `).bind(today, today, sessionHash, now + OSCE_TRIAL_SESSION_TTL_MS, user.email, planCondition.value, today, today).run();
+      if (update.meta?.changes !== 1 && account.subscription_status !== "pro") {
+        return jsonResponse({
+          requiresUpgrade: false,
+          message: "Limite diário de 3 simuladores OSCE atingido."
+        }, 403);
+      }
+    } catch (error) {
+      console.error("Falha ao registrar uso diário do OSCE:", error);
+      return jsonResponse({ error: "Não foi possível registrar seu uso do OSCE agora." }, 500);
+    }
     }
   }
 

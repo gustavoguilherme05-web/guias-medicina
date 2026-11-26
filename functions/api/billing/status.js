@@ -6,7 +6,7 @@ import {
 import { expireExperienceIfNeeded } from "../../_shared/experience.js";
 
 const RESTARTABLE_STATUSES = new Set(["free", "canceled", "incomplete_expired"]);
-const CURRENT_PLANS = new Set(["free", "prescription_only", "pro"]);
+const CURRENT_PLANS = new Set(["free", "experience", "prescription_only", "pro"]);
 
 export async function onRequestGet({ request, env }) {
   if (!hasDatabase(env)) {
@@ -27,8 +27,9 @@ export async function onRequestGet({ request, env }) {
     ).bind(user.email).first();
     const status = account?.subscription_status || "free";
     const requiresCpf = !account?.cpf_hash;
-    const isExperience = Boolean(account?.experience_expires_at);
     const storedPlan = account?.subscription_plan;
+    const isExperience = Boolean(account?.experience_expires_at) ||
+      storedPlan === "experience";
     const currentPlan = isExperience
       ? "experience"
       : (CURRENT_PLANS.has(storedPlan) ? storedPlan : "free");

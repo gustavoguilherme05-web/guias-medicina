@@ -85,6 +85,7 @@ export async function onRequestPost({ request, env }) {
       }, 409);
     }
     const isExperience = body.plan === "experience";
+    const isOneTimePackage = isExperience || body.plan === "prescricao_mensal";
     const isTemporaryExperience = Boolean(account?.experience_expires_at) &&
       !account?.stripe_subscription_id;
     if (ACTIVE_SUBSCRIPTION_STATUSES.has(account?.subscription_status) &&
@@ -93,7 +94,7 @@ export async function onRequestPost({ request, env }) {
     }
 
     const form = new URLSearchParams();
-    form.set("mode", isExperience ? "payment" : "subscription");
+    form.set("mode", isOneTimePackage ? "payment" : "subscription");
     form.set("ui_mode", "form");
     form.set(
       "return_url",

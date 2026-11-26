@@ -128,7 +128,6 @@ async function grantExperience(env, session, eventCreatedAt) {
     throw new Error("Checkout Session de experiência sem identificador ou e-mail.");
   }
 
-  const expiresAt = getExperienceExpiry(eventCreatedAt);
   const customerId = stripeId(session.customer);
   await env.DB.batch([
     env.DB.prepare(`
@@ -136,19 +135,45 @@ async function grantExperience(env, session, eventCreatedAt) {
       SET stripe_customer_id = COALESCE(?, stripe_customer_id),
           stripe_subscription_id = NULL,
           subscription_status = 'active',
-          subscription_plan = 'pro',
-          experience_expires_at = MAX(COALESCE(experience_expires_at, 0), ?)
+          subscription_plan = 'experience',
+          experience_expires_at = NULL,
+          prescription_package_count = 0,
+          osce_package_count = 0
       WHERE email = ?
         AND NOT EXISTS (
           SELECT 1 FROM experience_purchases WHERE checkout_session_id = ?
         )
-    `).bind(customerId, expiresAt, email, sessionId),
+    `).bind(customerId, email, sessionId),
     env.DB.prepare(`
       INSERT OR IGNORE INTO experience_purchases
         (checkout_session_id, user_email, expires_at)
       VALUES (?, ?, ?)
-    `).bind(sessionId, email, expiresAt)
+    `).bind(sessionId, email, 0)
   ]);
+}
+
+async function grantLite(env, session) {
+  const sessionId = stripeId(session.id);
+  const emailValue = session.metadata?.user_email ||
+    session.client_reference_id ||
+    session.customer_details?.email ||
+    session.customer_email;
+  const email = typeof emailValue === "string" ? emailValue.trim().toLowerCase() : "";
+  if (!sessionId || !email) {
+    throw new Error("Checkout Session do PAD LITE sem identificador ou e-mail.");
+  }
+  const customerId = stripeId(session.customer);
+  await env.DB.prepare(`
+    UPDATE users
+    SET stripe_customer_id = COALESCE(?, stripe_customer_id),
+        stripe_subscription_id = NULL,
+        subscription_status = 'active',
+        subscription_plan = 'prescription_only',
+        experience_expires_at = NULL,
+        prescription_package_count = 0,
+        osce_package_count = 0
+    WHERE email = ?
+  `).bind(customerId, email).run();
 }
 
 export async function onRequestPost({ request, env }) {
@@ -178,6 +203,10 @@ export async function onRequestPost({ request, env }) {
           object.metadata?.plan === "experience" &&
           object.payment_status === "paid") {
         await grantExperience(env, object, event.created);
+      } else if (object?.mode === "payment" &&
+          object.metadata?.plan === "prescricao_mensal" &&
+          object.payment_status === "paid") {
+        await grantLite(env, object);
       } else if (object?.mode === "subscription") {
         const emailValue = object.metadata?.user_email ||
           object.client_reference_id ||
