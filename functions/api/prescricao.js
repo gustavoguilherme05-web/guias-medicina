@@ -177,6 +177,29 @@ export const RUBRICAS_POR_CASO = {
 - Ofereça ambiente com pouca luz/ruído; hidratação intravenosa apenas se houver desidratação ou incapacidade de ingerir líquidos.
 - Considere analgésico/AINE parenteral e antiemético conforme contraindicações; triptano pode ser opção após avaliar doença vascular, hipertensão não controlada, gestação e outras contraindicações.
 - Evite opioides e uso excessivo de medicação de resgate; reavalie resposta e oriente seguimento se crises recorrentes.`
+  },
+  'anemia-ferropriva-lactente': {
+    caso: 'Lactente do sexo masculino, 10 meses, 9 kg, com anemia microcítica: hemoglobina 9,2 g/dL, VCM 65 fL, HCM 21 pg, RDW 17,5% e ferritina 8 ng/mL. Introdução precoce de leite de vaca integral diluído e ausência de suplementação de ferro.',
+    diretriz: `- Prescreva ferro elementar em aproximadamente 3 a 5 mg/kg/dia. Para 9 kg, use cerca de 27 a 45 mg/dia, por exemplo 30 gotas de sulfato ferroso 125 mg/mL uma vez ao dia, conforme apresentação de 1,25 mg de ferro elementar por gota.
+- Oriente administração em jejum ou uma hora antes das refeições, evitando leite e derivados nas duas horas próximas da dose. Suco cítrico pode melhorar a absorção.
+- Estabeleça duração mínima de 3 meses após normalização da hemoglobina, com reposição total de estoques podendo alcançar 3 a 6 meses.
+- Oriente escurecimento das fezes e possível escurecimento dentário temporário, além da suspensão do leite de vaca integral e uso de fórmula adequada à idade.
+- Solicite hemograma com reticulócitos em cerca de 30 dias ou reticulócitos em 7 a 14 dias para avaliar resposta.`
+  },
+  'osteoporose-pos-menopausa': {
+    caso: 'Paciente feminina de 68 anos, pós-menopausa, com T-score -2,8 na coluna lombar e -2,6 no colo do fêmur, vitamina D 18 ng/mL, cálcio 9,4 mg/dL, TFG acima de 60 mL/min e baixo consumo de laticínios.',
+    diretriz: `- Considere alendronato 70 mg VO uma vez por semana como bisfosfonato de primeira linha, após avaliar esofagopatias, incapacidade de permanecer ereta e outras contraindicações.
+- Oriente administração em jejum com copo cheio de água, permanecer em pé ou sentada e não comer, beber ou tomar outras medicações por pelo menos 30 a 60 minutos.
+- Trate a deficiência de vitamina D com colecalciferol 50.000 UI VO uma vez por semana por 8 semanas, seguida de manutenção típica de 1.000 a 2.000 UI/dia ou esquema semanal equivalente, conforme protocolo e segurança.
+- Complemente cálcio dietético até a meta total de 1.000 a 1.200 mg/dia; por exemplo, carbonato de cálcio 1.250 mg, equivalente a 500 mg de cálcio elementar, uma vez ao dia com uma refeição.
+- Inclua exercícios resistidos e de equilíbrio, prevenção de quedas e avaliação periódica de tolerância, renais, cálcio e seguimento.`
+  },
+  'fibromialgia': {
+    caso: 'Paciente feminina de 42 anos com dor difusa há 8 meses, sono não reparador, fadiga e sintomas depressivos leves, sem sinais inflamatórios, endócrinos ou musculares laboratoriais.',
+    diretriz: `- A atividade física aeróbica e de fortalecimento é obrigatória, com início gradual e frequência típica de 3 a 5 vezes por semana. Oriente higiene do sono e considere terapia cognitivo-comportamental.
+- Como tratamento farmacológico de primeira linha, pode-se escolher duloxetina 30 mg pela manhã por 7 dias e aumentar para 60 mg/dia, conforme tolerabilidade. Amitriptilina à noite é alternativa e pode iniciar em 12,5 mg. Pregabalina à noite é outra opção, titulando conforme resposta.
+- Antes de iniciar, avalie contraindicações, interações, função renal e hepática, gestação e risco de ideação suicida. Agrupe critérios claros de revisão e seguimento.
+- Evite opioides fortes, corticoides e AINEs em uso contínuo para tratar fibromialgia, pois não têm benefício consistente e aumentam riscos. Não use testes laboratoriais repetidos rotineiramente uma vez feito o diagnóstico clínico.`
   }
 };
 

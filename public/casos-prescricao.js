@@ -226,5 +226,35 @@ window.PRESCRIPTION_CASES = [
       { titulo: 'Sinais vitais e exame físico', texto: 'Sinais vitais estáveis. Exame neurológico sem sinais de alarme, sem rigidez de nuca ou déficits focais.' },
       { titulo: 'Desafio', texto: 'Manejo da crise abortiva na emergência. Prescreva hidratação e medicações endovenosas (analgésicos, triptanos ou antieméticos) e cuidados ambientais.' }
     ]
+  },
+  {
+    id: 'anemia-ferropriva-lactente',
+    titulo: 'Anemia Ferropriva em Lactente',
+    secoes: [
+      { titulo: 'Contexto', texto: 'Consulta de puericultura em unidade básica de saúde.' },
+      { titulo: 'História', texto: 'Lactente do sexo masculino, 10 meses de idade, pesando 9 kg. Nasceu a termo, com peso adequado. Recebeu aleitamento materno exclusivo até os 4 meses, quando a mãe introduziu leite de vaca integral diluído. Nunca fez suplementação profilática de ferro. Nos últimos dias está mais irritado, hipoativo e descorado. Nega febre, diarreia ou sangramentos.' },
+      { titulo: 'Exame físico e exames', texto: 'Bom estado geral, hipocorado 2+, hidratado e acianótico. Sopro sistólico suave 1/6 em foco mitral. Sem visceromegalias. Hemoglobina 9,2 g/dL, hematócrito 29%, VCM 65 fL, HCM 21 pg, RDW 17,5%, leucócitos e plaquetas normais. Ferritina sérica 8 ng/mL.' },
+      { titulo: 'Desafio', texto: 'Prescreva o ferro elementar, a posologia, a duração aproximada do tratamento, orientações de administração e acompanhamento laboratorial.' }
+    ]
+  },
+  {
+    id: 'osteoporose-pos-menopausa',
+    titulo: 'Osteoporose Pós-Menopausa',
+    secoes: [
+      { titulo: 'Contexto', texto: 'Ambulatório de clínica médica.' },
+      { titulo: 'História', texto: 'Paciente do sexo feminino, 68 anos, menopausa aos 49 anos, assintomática. Densitometria óssea solicitada na rotina. Mãe teve fratura de fêmur aos 74 anos. Nega pirose, refluxo gastroesofágico, úlcera péptica, disfagia, tabagismo e etilismo. Consome um copo de leite por dia.' },
+      { titulo: 'Exame físico e exames', texto: 'PA 120 por 80 mmHg, IMC 22 kg/m², sem deformidades ou dor à palpação da coluna. Creatinina 0,8 mg/dL e TFG acima de 60 mL/min. Cálcio sérico total 9,4 mg/dL e PTH normal. Vitamina D 25-hidroxi de 18 ng/mL. T-score da coluna lombar menos 2,8 e do colo do fêmur menos 2,6.' },
+      { titulo: 'Desafio', texto: 'Prescreva o tratamento antiosteoporótico, a reposição de cálcio e vitamina D, as instruções obrigatórias de administração e orientações não farmacológicas.' }
+    ]
+  },
+  {
+    id: 'fibromialgia',
+    titulo: 'Fibromialgia',
+    secoes: [
+      { titulo: 'Contexto', texto: 'Ambulatório de atenção primária.' },
+      { titulo: 'História', texto: 'Paciente do sexo feminino, 42 anos, professora. Dor difusa há 8 meses em cervical, ombros, região lombar e quadris. Sono não reparador, fadiga ao acordar e sintomas depressivos leves. Nega edema articular, febre ou rigidez matinal prolongada. Sem comorbidades, alergias ou medicamentos contínuos.' },
+      { titulo: 'Exame físico e exames', texto: 'Dor difusa à palpação de partes moles, sem sinovite, calor ou rubor. Força muscular grau 5/5. Hemograma, VHS, PCR, TSH, T4 livre, CPK e FAN normais.' },
+      { titulo: 'Desafio', texto: 'Elabore um plano inicial não farmacológico e escolha uma opção farmacológica de primeira linha adequada à dor, ao sono e aos sintomas depressivos.' }
+    ]
   }
 ];

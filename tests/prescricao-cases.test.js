@@ -27,7 +27,7 @@ test("prescription cases have unique IDs and backend feedback rubrics", () => {
   }
 });
 
-test("the 20 prescription cases link to distinct existing guides", () => {
+test("the prescription cases with guides link to distinct existing guides", () => {
   const casosComGuia = casos.filter((caso) => Number.isInteger(caso.guiaId));
   const guiaIds = new Set(guias.map((guia) => guia.id));
 
